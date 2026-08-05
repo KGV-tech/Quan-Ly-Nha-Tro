@@ -519,10 +519,9 @@ function showSection(sectionName) {
     }
 }
 
-// Make showSection globally available (but don't override if already exists)
-if (!window.showSection) {
-    window.showSection = showSection;
-}
+// Use the application router rather than the older core helper, whose argument
+// format differs and could leave the previous screen blank.
+window.showSection = showSection;
 
 // Global function to ensure house-expense-section is always hidden
 function ensureHouseExpenseSectionHidden() {

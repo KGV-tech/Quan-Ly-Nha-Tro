@@ -157,6 +157,28 @@ function isMoveoutRoomFeeExpense(expense) {
         expense.category === 'prepaid_unused';
 }
 
+function isTenantMovedOut(tenant) {
+    return tenant.status === 'moved_out' || Boolean(tenant.moveOutDate) || Boolean(tenant.endDate);
+}
+
+function completeTenantMoveout(tenantId) {
+    const tenants = getTenantsFromLocalStorage();
+    const tenant = tenants.find(item => item.id === tenantId);
+    if (!tenant || isTenantMovedOut(tenant)) return;
+    if (!confirm(`Hoàn tất trả phòng cho ${tenant.name}? Hồ sơ và toàn bộ lịch sử thu tiền vẫn được giữ lại.`)) return;
+
+    tenant.status = 'moved_out';
+    tenant.moveOutDate = new Date().toISOString().split('T')[0];
+    tenant.endDate = tenant.moveOutDate;
+    saveTenantsToLocalStorage(tenants);
+
+    const stillOccupied = tenants.some(item => item.roomId === tenant.roomId && !isTenantMovedOut(item));
+    if (!stillOccupied) updateRoomStatus(tenant.roomId, 'available');
+
+    renderAllTenantsList();
+    window.showSection('tenants');
+}
+
 function openRoomFeesModal(tenantId, options) {
     const mode = options && options.mode ? options.mode : 'add';
     const tenant = getTenantsFromLocalStorage().find(t => t.id === tenantId);
@@ -1234,8 +1256,6 @@ function renderTenantsForRoom(roomId) {
 }
 
 function renderAllTenantsList(filteredTenants = null) {
-    console.log('renderAllTenantsList called');
-    
     // Ensure DOM elements are initialized
     if (!allTenantsListEl) {
         allTenantsListEl = document.getElementById('all-tenants-list');
@@ -1259,60 +1279,46 @@ function renderAllTenantsList(filteredTenants = null) {
         return;
     }
     
-    allTenantsListEl.innerHTML = '';
-    
-    tenants.forEach(tenant => {
-        const room = getRoomById(tenant.roomId);
-        const house = room ? getHouseById(room.houseId) : null;
-        
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <div class="card-header">
-                <h3 class="card-title">${tenant.name}</h3>
-            </div>
-            <div class="card-body">
-                <p><i class="fas fa-phone"></i> ${tenant.phone || 'Chưa có'}</p>
+    const createSection = (title, list, emptyText) => {
+        const section = document.createElement('div');
+        section.className = 'tenant-status-section';
+        section.innerHTML = `<h3>${title} <span>${list.length}</span></h3>`;
+        const houseGrid = document.createElement('div');
+        houseGrid.className = 'tenant-house-grid';
+        const groups = new Map();
+        list.forEach(tenant => {
+            const room = getRoomById(tenant.roomId);
+            const house = room ? getHouseById(room.houseId) : null;
+            const key = house ? house.id : 'unassigned';
+            if (!groups.has(key)) groups.set(key, { house, tenants: [] });
+            groups.get(key).tenants.push({ tenant, room });
+        });
+        if (!groups.size) houseGrid.innerHTML = `<p class="tenant-list-empty">${emptyText}</p>`;
+        groups.forEach(({ house, tenants: groupTenants }) => {
+            const houseColumn = document.createElement('div');
+            houseColumn.className = 'tenant-house-column';
+            houseColumn.innerHTML = `<h4><i class="fas fa-home"></i> ${house ? house.name : 'Chưa gán nhà'}</h4>`;
+            groupTenants.sort((a, b) => a.tenant.name.localeCompare(b.tenant.name, 'vi')).forEach(({ tenant, room }) => {
+                const nameButton = document.createElement('button');
+                nameButton.className = 'tenant-name-link';
+                nameButton.innerHTML = `${tenant.name}<small>${room ? room.name : 'Chưa gán phòng'}</small>`;
+                nameButton.onclick = () => showTenantDetails(tenant.id);
+                houseColumn.appendChild(nameButton);
+            });
+            houseGrid.appendChild(houseColumn);
+        });
+        section.appendChild(houseGrid);
+        return section;
+    };
 
-                <p><i class="fas fa-id-card"></i> CMND/CCCD: ${tenant.idCard || 'Chưa có'}</p>
-                <p><i class="fas fa-calendar-alt"></i> Ngày bắt đầu thuê phòng: ${formatDate(tenant.joinDate || tenant.startDate)}</p>
-                <p><i class="fas fa-door-open"></i> Phòng thuê: ${room ? room.name : 'N/A'}</p>
-                <p><i class="fas fa-home"></i> Nhà cho thuê: ${house ? house.name : 'N/A'}</p>
-            </div>
-            <div class="card-footer">
-                <button class="btn-secondary tenant-edit-btn" data-id="${tenant.id}">
-                    <i class="fas fa-edit"></i> Sửa
-                </button>
-                <button class="btn-danger tenant-delete-btn" data-id="${tenant.id}">
-                    <i class="fas fa-trash"></i> Xóa
-                </button>
-                <button class="btn-primary tenant-view-btn" data-id="${tenant.id}">
-                    <i class="fas fa-eye"></i> Chi tiết
-                </button>
-            </div>
-        `;
-        
-        allTenantsListEl.appendChild(card);
-        
-        // Thêm event listeners cho các nút
-        const viewBtn = card.querySelector('.tenant-view-btn');
-        const editBtn = card.querySelector('.tenant-edit-btn');
-        const deleteBtn = card.querySelector('.tenant-delete-btn');
-        
-        viewBtn.addEventListener('click', () => {
-            showTenantDetails(tenant.id);
-        });
-        editBtn.addEventListener('click', () => {
-            console.log('Edit button clicked for tenant:', tenant.id);
-            openTenantModal(tenant.id);
-        });
-        deleteBtn.addEventListener('click', () => {
-            if (confirm(`Bạn có chắc chắn muốn xóa người thuê ${tenant.name}? Tất cả chi phí liên quan cũng sẽ bị xóa.`)) {
-                deleteTenant(tenant.id);
-                renderAllTenantsList();
-            }
-        });
-    });
+    const activeTenants = tenants.filter(tenant => !isTenantMovedOut(tenant));
+    const movedOutTenants = tenants.filter(isTenantMovedOut);
+    allTenantsListEl.innerHTML = '';
+    allTenantsListEl.className = 'tenant-status-lists';
+    allTenantsListEl.append(
+        createSection('1. Danh sách đang thuê phòng', activeTenants, 'Chưa có người thuê đang ở.'),
+        createSection('2. Danh sách đã trả phòng', movedOutTenants, 'Chưa có người thuê đã trả phòng.')
+    );
 }
 
 function showTenantDetails(tenantId) {
@@ -1324,6 +1330,9 @@ function showTenantDetails(tenantId) {
     
     // Set current tenant ID for header button
     window.currentTenantId = tenantId;
+    const movedOut = isTenantMovedOut(tenant);
+    const roomFeesButton = document.getElementById('room-fees-btn-header');
+    if (roomFeesButton) roomFeesButton.style.display = movedOut ? 'none' : '';
     
     // Lấy thông tin phòng và nhà
     const room = getRoomById(tenant.roomId);
@@ -1399,6 +1408,7 @@ function showTenantDetails(tenantId) {
             <button class="btn-secondary edit-tenant-btn" data-id="${tenant.id}">
                 <i class="fas fa-edit"></i> Sửa thông tin
             </button>
+            ${movedOut ? '<span class="tenant-moved-out-badge">Đã trả phòng</span>' : `<button class="btn-success complete-moveout-btn" data-id="${tenant.id}"><i class="fas fa-check-circle"></i> Hoàn tất trả phòng</button>`}
         </div>
     `;
     
@@ -1411,6 +1421,8 @@ function showTenantDetails(tenantId) {
             openTenantModal(tenantId);
         });
     }
+    const completeMoveoutBtn = tenantDetailsEl.querySelector('.complete-moveout-btn');
+    if (completeMoveoutBtn) completeMoveoutBtn.addEventListener('click', () => completeTenantMoveout(tenant.id));
     
     // Hiển thị danh sách chi phí của người thuê
     renderExpensesList(tenantId);
@@ -1614,6 +1626,9 @@ function renderExpensesList(tenantId) {
                         <button class="btn-icon time-group-edit-btn" data-time-key="${timeKey}" data-tenant-id="${tenantId}" title="Sửa kỳ chi phí">
                             <i class="fas fa-edit"></i>
                         </button>
+                        <button class="btn-icon time-group-view-btn" data-time-key="${timeKey}" data-tenant-id="${tenantId}" title="Xem nhanh phiếu thu">
+                            <i class="fas fa-eye"></i>
+                        </button>
                         <button class="btn-icon time-group-copy-btn" data-time-key="${timeKey}" data-tenant-id="${tenantId}" title="Copy & tạo mới">
                             <i class="fas fa-copy"></i>
                         </button>
@@ -1649,6 +1664,11 @@ function renderExpensesList(tenantId) {
             timeGroupEditBtn.addEventListener('click', () => {
                 openTimeGroupEditModal(timeKey, timeGroupExpenses, tenantId);
             });
+
+            const timeGroupViewBtn = timeGroupContainer.querySelector('.time-group-view-btn');
+            timeGroupViewBtn.addEventListener('click', () => {
+                viewRoomFeeReceipt(timeKey, timeGroupExpenses, tenantId);
+            });
             
             // Thêm event listener cho nút copy & tạo mới time group
             const timeGroupCopyBtn = timeGroupContainer.querySelector('.time-group-copy-btn');
@@ -1678,6 +1698,28 @@ function renderExpensesList(tenantId) {
         
         expensesListEl.appendChild(mainGroupContainer);
     });
+}
+
+function viewRoomFeeReceipt(timeKey, expenses, tenantId) {
+    const receiptExpenses = getExpensesForTenant(tenantId).filter(expense =>
+        !isMoveoutRoomFeeExpense(expense) &&
+        `${expense.fromDate || expense.date} đến ${expense.toDate || expense.date}` === timeKey
+    );
+    const receiptData = generateReceiptDataFromExpenses(tenantId, timeKey, receiptExpenses.length ? receiptExpenses : expenses);
+    if (!receiptData || typeof displaySimpleReceipt !== 'function') return;
+
+    document.getElementById('quick-receipt-modal')?.remove();
+    const modal = document.createElement('div');
+    modal.id = 'quick-receipt-modal';
+    modal.className = 'quick-receipt-modal';
+    const dialog = document.createElement('div');
+    dialog.className = 'quick-receipt-dialog';
+    dialog.innerHTML = `<div class="quick-receipt-actions"><strong>Phiếu thu — ${formatDateRangeDisplay(timeKey)}</strong><button type="button" aria-label="Đóng">&times;</button></div>`;
+    dialog.querySelector('button').onclick = () => modal.remove();
+    dialog.appendChild(displaySimpleReceipt(receiptData));
+    modal.onclick = event => { if (event.target === modal) modal.remove(); };
+    modal.appendChild(dialog);
+    document.body.appendChild(modal);
 }
 
 // Hàm thêm tóm tắt cho time group
