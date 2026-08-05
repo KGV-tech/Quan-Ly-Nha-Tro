@@ -229,7 +229,11 @@ function updateDashboardStats() {
 function getHouseTitleThemeClass(houseId) {
     const houses = getHousesFromLocalStorage();
     const house = houses.find(item => item.id === houseId);
-    const normalizedName = (house?.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const normalizedName = (house?.name || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/đ/g, 'd');
 
     if (normalizedName.includes('bach dang')) return 'house-title-green';
     if (normalizedName.includes('37/7')) return 'house-title-orange';
@@ -421,44 +425,11 @@ function renderAllRoomsList() {
             `;
         } else {
             housesRooms.forEach(room => {
-                const tenantsCount = getTenantsForRoom(room.id).filter(tenant => !isTenantMovedOut(tenant)).length;
-                const roomStatusText = getRoomStatusText(room.status);
-                
-                const roomItem = document.createElement('div');
-                roomItem.className = 'room-list-item';
-                roomItem.innerHTML = `
-                    <div class="room-item-info">
-                        <div class="room-item-header">
-                            <h4><i class="fas fa-door-closed"></i> ${room.name}</h4>
-                            <span class="room-status ${room.status}">${roomStatusText}</span>
-                        </div>
-                        <div class="room-item-details">
-                            <span class="room-price"><i class="fas fa-money-bill-wave"></i> ${formatCurrency(room.price)}/tháng</span>
-                            <span class="tenant-count"><i class="fas fa-users"></i> ${tenantsCount} người thuê</span>
-                            ${room.area ? `<span class="room-area"><i class="fas fa-expand-arrows-alt"></i> ${room.area}</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="room-item-actions">
-                        <button class="btn-secondary room-edit-btn" data-id="${room.id}"><i class="fas fa-edit"></i> Sửa</button>
-                        <button class="btn-danger room-delete-btn" data-id="${room.id}"><i class="fas fa-trash"></i> Xóa</button>
-                        <button class="btn-primary room-view-btn" data-id="${room.id}"><i class="fas fa-eye"></i> Chi tiết</button>
-                    </div>
-                `;
-                
-                roomsList.appendChild(roomItem);
-                
-                roomItem.querySelector('.room-view-btn').onclick = e => {
-                    e.stopPropagation();
-                    showRoomDetails(room.id);
-                };
-                roomItem.querySelector('.room-edit-btn').onclick = e => {
-                    e.stopPropagation();
-                    openRoomModal('edit', room.id);
-                };
-                roomItem.querySelector('.room-delete-btn').onclick = e => {
-                    e.stopPropagation();
-                    if (confirm(`Xóa phòng "${room.name}"?`)) deleteRoom(room.id);
-                };
+                const roomButton = document.createElement('button');
+                roomButton.className = 'tenant-name-link room-name-link';
+                roomButton.innerHTML = `<span><i class="fas fa-door-closed"></i> ${room.name}</span>`;
+                roomButton.onclick = () => showRoomDetails(room.id);
+                roomsList.appendChild(roomButton);
             });
         }
         
