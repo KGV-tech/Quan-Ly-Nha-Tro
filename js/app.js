@@ -535,8 +535,10 @@ function ensureHouseExpenseSectionHidden() {
 // Make the function globally available
 window.ensureHouseExpenseSectionHidden = ensureHouseExpenseSectionHidden;
 
-// Initialize the app when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
+// Start only after Supabase has authenticated the user and loaded cloud data.
+function startApplication() {
+    if (window.applicationStarted) return;
+    window.applicationStarted = true;
     try {
         // Check if data exists
         const existingHouses = getHousesFromLocalStorage();
@@ -639,10 +641,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
     } catch (error) {
+        window.applicationStarted = false;
         console.error('❌ Critical error during DOM setup:', error);
         alert('Lỗi khởi tạo ứng dụng: ' + error.message);
     }
-});
+}
+
+window.startApplication = startApplication;
 
 // ===========================================
 // EXPENSE MODAL FUNCTIONS (Single expenses, not room fees)

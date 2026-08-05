@@ -12,7 +12,7 @@
     ];
 
     const config = window.SUPABASE_CONFIG;
-    const status = { client: null, user: null, applyingRemote: false, timer: null, channel: null };
+    const status = { client: null, user: null, applyingRemote: false, timer: null, channel: null, loadedUserId: null };
 
     function getClient() {
         if (!config || !config.url || !config.publishableKey || !window.supabase) return null;
@@ -112,8 +112,7 @@
         }
         applySnapshot(row.data);
         setCloudMessage(`Đã tải dữ liệu đám mây (${new Date(row.updated_at).toLocaleString('vi-VN')}).`, 'success');
-        if (typeof refreshCurrentView === 'function') refreshCurrentView();
-        else location.reload();
+        if (window.applicationStarted && typeof refreshCurrentView === 'function') refreshCurrentView();
     }
 
     function subscribeToRemoteChanges() {
@@ -127,7 +126,7 @@
                 if (!status.applyingRemote && payload.new && payload.new.data) {
                     applySnapshot(payload.new.data);
                     setCloudMessage('Đã nhận dữ liệu mới từ thiết bị khác.', 'success');
-                    if (typeof refreshCurrentView === 'function') refreshCurrentView();
+                    if (window.applicationStarted && typeof refreshCurrentView === 'function') refreshCurrentView();
                 }
             })
             .subscribe();
@@ -135,37 +134,38 @@
 
     async function updateSession(session) {
         status.user = session ? session.user : null;
+        document.body.classList.toggle('authenticated', Boolean(status.user));
+        document.body.classList.toggle('auth-pending', !status.user);
         const controls = document.getElementById('cloud-sync-controls');
         if (controls) controls.style.display = status.user ? 'flex' : 'none';
         if (!status.user) {
+            status.loadedUserId = null;
             setCloudMessage('Đăng nhập để sao lưu và đồng bộ dữ liệu giữa các thiết bị.', '');
             return;
         }
+        if (status.loadedUserId === status.user.id) return;
+        status.loadedUserId = status.user.id;
         setCloudMessage(`Đã đăng nhập: ${status.user.email}. Đang kiểm tra dữ liệu đám mây…`, '');
         await loadCloudState();
         subscribeToRemoteChanges();
+        if (typeof window.startApplication === 'function') window.startApplication();
     }
 
-    async function openCloudSignIn() {
+    async function submitLogin(email, password) {
         const client = getClient();
-        if (!client) return alert('Thiếu cấu hình Supabase.');
-        const email = prompt('Email đăng nhập Supabase:');
-        if (!email) return;
-        const password = prompt('Mật khẩu (ít nhất 6 ký tự):');
-        if (!password) return;
+        if (!client) throw new Error('Thiếu cấu hình Supabase.');
         setCloudMessage('Đang đăng nhập…', '');
-        let result = await client.auth.signInWithPassword({ email, password });
-        if (result.error && /Invalid login credentials/i.test(result.error.message)) {
-            const createAccount = confirm('Tài khoản chưa tồn tại hoặc mật khẩu chưa đúng. Bạn có muốn tạo tài khoản mới?');
-            if (createAccount) result = await client.auth.signUp({ email, password });
-        }
+        const result = await client.auth.signInWithPassword({ email, password });
         if (result.error) {
             setCloudMessage(`Không thể đăng nhập: ${result.error.message}`, 'error');
-            return;
+            throw result.error;
         }
-        if (!result.data.session) {
-            setCloudMessage('Hãy xác nhận email rồi đăng nhập lại để bắt đầu đồng bộ.', '');
-        }
+    }
+
+    function openCloudSignIn() {
+        document.body.classList.remove('authenticated');
+        document.body.classList.add('auth-pending');
+        document.getElementById('login-email')?.focus();
     }
 
     async function signOutCloud() {
@@ -198,5 +198,25 @@
         const { data: { session } } = await client.auth.getSession();
         await updateSession(session);
         client.auth.onAuthStateChange((_event, newSession) => { updateSession(newSession); });
+
+        document.getElementById('login-form').addEventListener('submit', async event => {
+            event.preventDefault();
+            const errorEl = document.getElementById('login-error');
+            const button = document.getElementById('login-submit');
+            errorEl.textContent = '';
+            button.disabled = true;
+            button.textContent = 'Đang đăng nhập…';
+            try {
+                await submitLogin(
+                    document.getElementById('login-email').value.trim(),
+                    document.getElementById('login-password').value
+                );
+            } catch (error) {
+                errorEl.textContent = 'Email hoặc mật khẩu không đúng, hoặc tài khoản chưa được cấp quyền.';
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Đăng nhập';
+            }
+        });
     });
 }());
