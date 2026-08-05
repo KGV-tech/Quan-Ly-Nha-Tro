@@ -469,14 +469,22 @@ function addDataSyncButtons() {
             <button class="btn-secondary" onclick="importAllData()">
                 <i class="fas fa-upload"></i> Nhập dữ liệu
             </button>
+            <button class="btn-success" onclick="openCloudSignIn()">
+                <i class="fas fa-cloud"></i> Đăng nhập đồng bộ
+            </button>
+            <span id="cloud-sync-controls" style="display:none; gap:8px; align-items:center;">
+                <button class="btn-secondary" onclick="syncToCloudNow()"><i class="fas fa-sync"></i> Đồng bộ ngay</button>
+                <button class="btn-secondary" onclick="signOutCloud()">Đăng xuất</button>
+            </span>
         </div>
         <p class="export-note">
-            <i class="fas fa-info-circle"></i>
-            Sử dụng để đồng bộ dữ liệu giữa file:// và http://localhost
+            <i class="fas fa-info-circle"></i> Xuất/nhập bản sao lưu thủ công hoặc đăng nhập để đồng bộ đám mây.
         </p>
+        <p id="cloud-sync-status" class="export-note cloud-sync-status">Đang chuẩn bị đồng bộ đám mây…</p>
     `;
     
     exportSection.appendChild(syncDiv);
+    window.dispatchEvent(new Event('cloud-sync-ui-ready'));
 }
 
 
