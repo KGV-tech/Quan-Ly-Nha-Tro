@@ -113,16 +113,8 @@
             return;
         }
 
-        if (hasBusinessData(local)) {
-            const useCloud = confirm(
-                `Đã tìm thấy bản dữ liệu trên đám mây (${new Date(row.updated_at).toLocaleString('vi-VN')}).\n\n` +
-                'Chọn OK để dùng dữ liệu đám mây; chọn Hủy để giữ dữ liệu trên thiết bị và ghi đè bản đám mây.'
-            );
-            if (!useCloud) {
-                await pushSnapshot();
-                return;
-            }
-        }
+        // Cloud is the source of truth for the deployed application. Local
+        // data is only uploaded when this account has no cloud backup yet.
         applySnapshot(row.data);
         setCloudMessage(`Đã tải dữ liệu đám mây (${new Date(row.updated_at).toLocaleString('vi-VN')}).`, 'success');
         if (window.applicationStarted && typeof refreshCurrentView === 'function') refreshCurrentView();
