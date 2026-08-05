@@ -17,7 +17,7 @@ const BACK_BUTTON_CONFIGS = {
         }
     },
     'back-to-list-btn': {
-        targetSection: 'tenants',
+        targetSection: 'all-tenants',
         action: () => {
             renderAllTenantsList();
         }

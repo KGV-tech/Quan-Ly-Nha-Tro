@@ -483,7 +483,8 @@ function showSection(sectionName) {
     
     // Update navigation
     document.querySelectorAll('nav a').forEach(nav => nav.classList.remove('active'));
-    const navElement = document.getElementById('nav-' + sectionName);
+    const navSectionName = sectionName === 'all-tenants' ? 'tenants' : sectionName;
+    const navElement = document.getElementById('nav-' + navSectionName);
     if (navElement) {
         navElement.classList.add('active');
     }
@@ -502,6 +503,7 @@ function showSection(sectionName) {
             renderAllRoomsList();
             break;
         case 'tenants':
+        case 'all-tenants':
             renderAllTenantsList();
             break;
         case 'print-receipt':

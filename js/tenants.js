@@ -176,7 +176,7 @@ function completeTenantMoveout(tenantId) {
     if (!stillOccupied) updateRoomStatus(tenant.roomId, 'available');
 
     renderAllTenantsList();
-    window.showSection('tenants');
+    window.showSection('all-tenants');
 }
 
 function openRoomFeesModal(tenantId, options) {
@@ -2558,7 +2558,7 @@ function setupBackButtonListener() {
             try {
                 // First try to use the global showSection function
                 if (typeof window.showSection === 'function') {
-                    window.showSection('tenants');
+                    window.showSection('all-tenants');
                     console.log('Navigation completed using window.showSection');
                 } else {
                     // Fallback: manually show the section
