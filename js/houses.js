@@ -225,9 +225,16 @@ function updateDashboardStats() {
     document.getElementById('total-tenants').textContent = totalTenants;
 }
 
-// Màu nhận diện cố định cho từng nhà, dùng thống nhất ở Dashboard và danh sách người thuê.
+// Màu nhận diện cố định cho từng nhà, dùng thống nhất ở Dashboard và các danh sách.
 function getHouseTitleThemeClass(houseId) {
-    const houseIndex = getHousesFromLocalStorage().findIndex(house => house.id === houseId);
+    const houses = getHousesFromLocalStorage();
+    const house = houses.find(item => item.id === houseId);
+    const normalizedName = (house?.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+    if (normalizedName.includes('bach dang')) return 'house-title-green';
+    if (normalizedName.includes('37/7')) return 'house-title-orange';
+
+    const houseIndex = houses.findIndex(item => item.id === houseId);
     return houseIndex >= 0 && houseIndex % 2 === 1 ? 'house-title-green' : 'house-title-orange';
 }
 
@@ -376,22 +383,20 @@ function renderAllRoomsList() {
     }
     
     allRoomsListEl.innerHTML = '';
+    allRoomsListEl.className = 'room-house-grid';
     
     houses.forEach(house => {
         const housesRooms = allRooms.filter(r => r.houseId === house.id);
         housesRooms.sort((a, b) => a.name.localeCompare(b.name, 'vi', { numeric: true, sensitivity: 'base' }));
         
         const houseGroup = document.createElement('div');
-        houseGroup.className = 'house-group';
+        houseGroup.className = 'room-house-column';
         
         const houseHeader = document.createElement('div');
-        houseHeader.className = 'house-group-header';
+        houseHeader.className = 'room-house-header';
         houseHeader.innerHTML = `
-            <div class="house-group-info">
-                <div class="house-header-main">
-                    <i class="fas fa-chevron-down toggle-icon" data-house-id="${house.id}"></i>
-                    <h3><i class="fas fa-home"></i> ${house.name}</h3>
-                </div>
+            <div class="room-house-info">
+                <h3 class="${getHouseTitleThemeClass(house.id)}"><i class="fas fa-home"></i> ${house.name}</h3>
                 <p class="house-address"><i class="fas fa-map-marker-alt"></i> ${house.address}</p>
                 <span class="room-count">${housesRooms.length} phòng</span>
             </div>
@@ -405,8 +410,7 @@ function renderAllRoomsList() {
         houseGroup.appendChild(houseHeader);
         
         const roomsList = document.createElement('div');
-        roomsList.className = 'rooms-list';
-        roomsList.id = `rooms-list-${house.id}`;
+        roomsList.className = 'room-house-list';
         
         if (housesRooms.length === 0) {
             roomsList.innerHTML = `
@@ -417,7 +421,7 @@ function renderAllRoomsList() {
             `;
         } else {
             housesRooms.forEach(room => {
-                const tenantsCount = getTenantsForRoom(room.id).length;
+                const tenantsCount = getTenantsForRoom(room.id).filter(tenant => !isTenantMovedOut(tenant)).length;
                 const roomStatusText = getRoomStatusText(room.status);
                 
                 const roomItem = document.createElement('div');
@@ -460,18 +464,8 @@ function renderAllRoomsList() {
         
         houseGroup.appendChild(roomsList);
         allRoomsListEl.appendChild(houseGroup);
-        
-        const toggleIcon = houseHeader.querySelector('.toggle-icon');
-        const houseNameEl = houseHeader.querySelector('h3');
-        [toggleIcon, houseNameEl].forEach(el => {
-            el.style.cursor = 'pointer';
-            el.onclick = e => {
-                e.stopPropagation();
-                toggleHouseRoomsList(house.id);
-            };
-        });
 
-        // Bind event for the beautiful expense button after appending to DOM
+        // Bind event for the house expense button after appending to DOM
         const expenseBtn = houseHeader.querySelector('.btn-expense-house');
         if (expenseBtn) {
             expenseBtn.onclick = e => {
