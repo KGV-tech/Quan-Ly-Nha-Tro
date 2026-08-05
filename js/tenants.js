@@ -231,6 +231,8 @@ function openRoomFeesModal(tenantId, options) {
             : 'Thu tiền phòng';
     }
     const isMoveoutMode = !!(roomFeesModal && roomFeesModal.classList.contains('inline-room-fees'));
+    const saveRoomFeesButton = document.getElementById('save-room-fees-btn');
+    if (saveRoomFeesButton) saveRoomFeesButton.textContent = isMoveoutMode ? 'Lưu' : 'Lưu khoản thu';
     const refundCard = document.getElementById('room-fees-refund-card');
     if (refundCard) {
         refundCard.style.display = isMoveoutMode ? 'block' : 'none';
@@ -999,6 +1001,7 @@ function saveRoomFees() {
         
         // Render and complete
         renderExpensesList(tenantId);
+        renderMoveoutExpensesList(tenantId);
         if (isMoveoutReceipt && typeof loadMoveoutPaymentPeriods === 'function') {
             const moveoutTenantSelect = document.getElementById('moveout-tenant-select');
             loadMoveoutPaymentPeriods(moveoutTenantSelect?.value || tenantId);
@@ -1018,7 +1021,8 @@ function saveRoomFees() {
         isSavingRoomFees = false;
         if (saveBtn) {
             saveBtn.disabled = false;
-            saveBtn.textContent = 'Lưu chi phí';
+            const isMoveoutMode = document.getElementById('room-fees-modal')?.classList.contains('inline-room-fees');
+            saveBtn.textContent = isMoveoutMode ? 'Lưu' : 'Lưu khoản thu';
         }
     }
 }
@@ -1426,6 +1430,7 @@ function showTenantDetails(tenantId) {
     
     // Hiển thị danh sách chi phí của người thuê
     renderExpensesList(tenantId);
+    renderMoveoutExpensesList(tenantId);
     
     // Hiển thị phần chi tiết người thuê và ẩn các phần khác
     
@@ -1715,6 +1720,54 @@ function viewRoomFeeReceipt(timeKey, expenses, tenantId) {
     const dialog = document.createElement('div');
     dialog.className = 'quick-receipt-dialog';
     dialog.innerHTML = `<div class="quick-receipt-actions"><strong>Phiếu thu — ${formatDateRangeDisplay(timeKey)}</strong><button type="button" aria-label="Đóng">&times;</button></div>`;
+    dialog.querySelector('button').onclick = () => modal.remove();
+    dialog.appendChild(displaySimpleReceipt(receiptData));
+    modal.onclick = event => { if (event.target === modal) modal.remove(); };
+    modal.appendChild(dialog);
+    document.body.appendChild(modal);
+}
+
+function renderMoveoutExpensesList(tenantId) {
+    const container = document.getElementById('moveout-expenses-list');
+    if (!container) return;
+    const groups = {};
+    getExpensesForTenant(tenantId).filter(isMoveoutRoomFeeExpense).forEach(expense => {
+        const fromDate = expense.fromDate || expense.date || '';
+        const toDate = expense.toDate || expense.date || '';
+        const key = `${fromDate} đến ${toDate}`;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(expense);
+    });
+    const entries = Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
+    if (!entries.length) {
+        container.innerHTML = '';
+        return;
+    }
+    container.innerHTML = '<h3 class="moveout-history-title">Phiếu trả phòng</h3>';
+    const list = document.createElement('div');
+    list.className = 'moveout-history-list';
+    entries.forEach(([timeKey, expenses]) => {
+        const item = document.createElement('div');
+        item.className = 'moveout-history-item';
+        const total = expenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
+        item.innerHTML = `<span><strong>${formatDateRangeDisplay(timeKey)}</strong><small>${expenses.length} khoản · ${formatCurrency(total)}</small></span><button type="button" class="btn-secondary">Xem phiếu</button>`;
+        item.querySelector('button').onclick = () => viewMoveoutReceipt(timeKey, expenses, tenantId);
+        list.appendChild(item);
+    });
+    container.appendChild(list);
+}
+
+function viewMoveoutReceipt(timeKey, expenses, tenantId) {
+    const receiptData = generateReceiptDataFromExpenses(tenantId, timeKey, expenses);
+    if (!receiptData || typeof displaySimpleReceipt !== 'function') return;
+    receiptData.receiptKind = 'moveout';
+    document.getElementById('quick-receipt-modal')?.remove();
+    const modal = document.createElement('div');
+    modal.id = 'quick-receipt-modal';
+    modal.className = 'quick-receipt-modal';
+    const dialog = document.createElement('div');
+    dialog.className = 'quick-receipt-dialog';
+    dialog.innerHTML = `<div class="quick-receipt-actions"><strong>Phiếu trả phòng — ${formatDateRangeDisplay(timeKey)}</strong><button type="button" aria-label="Đóng">&times;</button></div>`;
     dialog.querySelector('button').onclick = () => modal.remove();
     dialog.appendChild(displaySimpleReceipt(receiptData));
     modal.onclick = event => { if (event.target === modal) modal.remove(); };

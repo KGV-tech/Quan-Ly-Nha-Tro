@@ -146,7 +146,7 @@ function setupMoveoutSection() {
     if (!tenantSelect || !declareBtn) return;
 
     const tenants = getTenantsFromLocalStorage()
-        .filter(tenant => tenant.roomId)
+        .filter(tenant => tenant.roomId && (typeof isTenantMovedOut !== 'function' || !isTenantMovedOut(tenant)))
         .sort((a, b) => (a.name || '').localeCompare(b.name || 'vi'));
 
     const buildOptionLabel = (tenant, index) => {
