@@ -176,7 +176,7 @@ function openTenantModal(tenantId = null, roomId = null) {
         const initialDepositEl = document.getElementById('tenant-initial-deposit');
         if (rentStartDayEl) rentStartDayEl.value = startDay || '';
         if (rentEndDayEl) rentEndDayEl.value = endDay || '';
-        if (initialDepositEl) initialDepositEl.value = tenant.initialDeposit || 0;
+        if (initialDepositEl) initialDepositEl.value = formatTenantDeposit(tenant.initialDeposit);
         document.getElementById('tenant-notes').value = tenant.notes || '';
         document.getElementById('tenant-notes').value = tenant.notes || '';
     } else {
@@ -203,6 +203,18 @@ function openTenantModal(tenantId = null, roomId = null) {
     modal.style.left = '0';
     modal.style.width = '100%';
     modal.style.height = '100%';
+
+    const initialDepositEl = document.getElementById('tenant-initial-deposit');
+    if (initialDepositEl) {
+        initialDepositEl.oninput = () => {
+            initialDepositEl.value = formatTenantDeposit(initialDepositEl.value);
+        };
+    }
+}
+
+function formatTenantDeposit(value) {
+    const digits = String(value ?? '').replace(/\D/g, '');
+    return digits ? Number(digits).toLocaleString('vi-VN') : '';
 }
 
 // --- Individual modals for each expense type ---
@@ -619,7 +631,9 @@ function saveTenant() {
     const roomId = tenantRoomIdField ? tenantRoomIdField.value : '';
     const rentStartDay = tenantRentStartDayField ? parseInt(tenantRentStartDayField.value, 10) || '' : '';
     const rentEndDay = tenantRentEndDayField ? parseInt(tenantRentEndDayField.value, 10) || '' : '';
-    const initialDeposit = tenantInitialDepositField ? parseFloat(tenantInitialDepositField.value) || 0 : 0;
+    const initialDeposit = tenantInitialDepositField
+        ? Number(tenantInitialDepositField.value.replace(/\D/g, '')) || 0
+        : 0;
     const notes = tenantNotesField ? tenantNotesField.value : '';
     
     // Validation: Chỉ yêu cầu tên người thuê (người dùng nhập)
