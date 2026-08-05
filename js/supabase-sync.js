@@ -20,6 +20,11 @@
         return status.client;
     }
 
+    function resolveLoginIdentifier(identifier) {
+        const normalized = identifier.trim().toLowerCase();
+        return (config.loginAliases && config.loginAliases[normalized]) || normalized;
+    }
+
     function cloudSnapshot() {
         const data = {};
         CLOUD_STORAGE_KEYS.forEach(key => {
@@ -208,7 +213,7 @@
             button.textContent = 'Đang đăng nhập…';
             try {
                 await submitLogin(
-                    document.getElementById('login-email').value.trim(),
+                    resolveLoginIdentifier(document.getElementById('login-email').value),
                     document.getElementById('login-password').value
                 );
             } catch (error) {
