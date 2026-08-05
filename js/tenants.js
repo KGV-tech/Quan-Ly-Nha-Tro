@@ -161,6 +161,26 @@ function isTenantMovedOut(tenant) {
     return tenant.status === 'moved_out' || Boolean(tenant.moveOutDate) || Boolean(tenant.endDate);
 }
 
+function getRoomDisplayOrder(room) {
+    const name = room?.name || '';
+    const floorMatch = name.match(/lầu\s*(\d+)/i);
+    const numberMatch = name.match(/số\s*(\d+)/i);
+    return {
+        floor: floorMatch ? Number(floorMatch[1]) : Number.MAX_SAFE_INTEGER,
+        number: numberMatch ? Number(numberMatch[1]) : Number.MAX_SAFE_INTEGER,
+        name
+    };
+}
+
+function compareTenantsByRoom(a, b) {
+    const roomA = getRoomDisplayOrder(a.room);
+    const roomB = getRoomDisplayOrder(b.room);
+    return roomA.floor - roomB.floor ||
+        roomA.number - roomB.number ||
+        roomA.name.localeCompare(roomB.name, 'vi') ||
+        a.tenant.name.localeCompare(b.tenant.name, 'vi');
+}
+
 function completeTenantMoveout(tenantId) {
     const tenants = getTenantsFromLocalStorage();
     const tenant = tenants.find(item => item.id === tenantId);
@@ -1302,7 +1322,7 @@ function renderAllTenantsList(filteredTenants = null) {
             const houseColumn = document.createElement('div');
             houseColumn.className = 'tenant-house-column';
             houseColumn.innerHTML = `<h4><i class="fas fa-home"></i> ${house ? house.name : 'Chưa gán nhà'}</h4>`;
-            groupTenants.sort((a, b) => a.tenant.name.localeCompare(b.tenant.name, 'vi')).forEach(({ tenant, room }) => {
+            groupTenants.sort(compareTenantsByRoom).forEach(({ tenant, room }) => {
                 const nameButton = document.createElement('button');
                 nameButton.className = 'tenant-name-link';
                 nameButton.innerHTML = `${tenant.name}<small>${room ? room.name : 'Chưa gán phòng'}</small>`;
