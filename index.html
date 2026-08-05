@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ứng dụng Quản lý Nhà Trọ</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Quản lý Nhà Trọ</h1>
+            <nav>
+                <ul>
+                    <li><a href="#" class="active" id="nav-home">Trang chủ</a></li>
+                    <li><a href="#" id="nav-rooms">Danh sách phòng</a></li>
+                    <li><a href="#" id="nav-tenants">Người thuê</a></li>
+                    <li><a href="#" id="nav-moveout">Trả phòng</a></li>
+                    <li><a href="#" id="nav-print-receipt">In phiếu thu</a></li>
+                    <li><a href="#" id="nav-export">Xuất File</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Dashboard Trang chủ -->
+            <section id="home-section" class="section active">
+                <div class="section-header">
+                    <h2>🏠 Dashboard Quản lý</h2>
+                    <button id="add-house-btn" class="btn-primary">
+                        <i class="fas fa-plus"></i> Thêm nhà cho thuê
+                    </button>
+                </div>
+                
+                <!-- Stats Overview -->
+                <div class="dashboard-stats">
+                    <div class="stat-card-dashboard">
+                        <div class="stat-icon houses-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="total-houses">0</h3>
+                            <p>Tổng số nhà</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-dashboard">
+                        <div class="stat-icon rooms-icon">
+                            <i class="fas fa-door-open"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="total-rooms">0</h3>
+                            <p>Tổng số phòng</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-dashboard">
+                        <div class="stat-icon available-icon">
+                            <i class="fas fa-key"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="available-rooms">0</h3>
+                            <p>Phòng trống</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-dashboard">
+                        <div class="stat-icon tenants-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="total-tenants">0</h3>
+                            <p>Người thuê</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Houses Overview -->
+                <div class="dashboard-overview">
+                    <h3>🏢 Tổng quan nhà cho thuê</h3>
+                    <div id="houses-overview" class="houses-overview-grid">
+                        <!-- Houses overview sẽ được hiển thị ở đây -->
+                        <div class="empty-overview">
+                            <i class="fas fa-home"></i>
+                            <p>Chưa có nhà cho thuê nào</p>
+                            <button class="btn-primary" onclick="document.getElementById('add-house-btn').click()">
+                                <i class="fas fa-plus"></i> Thêm nhà đầu tiên
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Phần hiển thị danh sách tất cả phòng -->
+            <section id="all-rooms-section" class="section">
+                <div class="section-header">
+                    <h2>Danh sách tất cả phòng</h2>
+                </div>
+                <div id="all-rooms-list" class="houses-container">
+                    <!-- Danh sách tất cả phòng được nhóm theo nhà sẽ được hiển thị ở đây -->
+                    <div class="empty-state">
+                        <i class="fas fa-door-open"></i>
+                        <p>Chưa có phòng nào. Hãy thêm nhà cho thuê và phòng!</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Phần hiển thị chi tiết nhà và phòng -->
+            <section id="house-details-section" class="section">
+                <div class="section-header">
+                    <h2>Chi tiết nhà: <span id="house-name-header"></span></h2>
+                    <div>
+                        <button id="back-to-houses-btn" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </button>
+
+                    </div>
+                </div>
+                
+                <div class="house-info">
+                    <div id="house-details"></div>
+                </div>
+                
+                <div class="rooms-container">
+                    <h3>Danh sách phòng</h3>
+                    <div id="rooms-list" class="cards-container">
+                        <!-- Danh sách phòng sẽ được hiển thị ở đây -->
+                        <div class="empty-state">
+                            <i class="fas fa-door-open"></i>
+                            <p>Chưa có phòng nào. Hãy thêm phòng mới!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Phần hiển thị chi tiết phòng và người thuê -->
+            <section id="room-details-section" class="section">
+                <div class="section-header">
+                    <h2>Chi tiết phòng: <span id="room-name-header"></span></h2>
+                    <div>
+                        <button id="back-to-house-btn" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </button>
+                        <button id="add-tenant-btn" class="btn-primary">
+                            <i class="fas fa-plus"></i> Thêm người thuê
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Grid layout cho chi tiết phòng -->
+                <div class="room-details-grid">
+                    <!-- Cột 1: Hình ảnh và thông tin phòng -->
+                    <div class="room-info-card">
+                        <div class="room-image-container">
+                            <div id="room-detail-image" class="room-detail-image"></div>
+                        </div>
+                        <div class="room-info-details">
+                            <h3>📋 Thông tin phòng</h3>
+                            <div id="room-details"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cột 2: Thông tin người thuê -->
+                    <div class="tenants-info-card">
+                        <div class="tenants-header">
+                            <h3>👥 Người thuê phòng</h3>
+                            <span class="tenant-count-badge" id="tenant-count-badge">0 người</span>
+                        </div>
+                        <div id="tenants-list-compact">
+                            <!-- Danh sách người thuê sẽ được hiển thị ở đây -->
+                            <div class="empty-state-compact">
+                                <i class="fas fa-users"></i>
+                                <p>Chưa có người thuê nào</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Phần chi tiết người thuê và chi phí -->
+            <section id="tenant-details-section" class="section">
+                <div class="section-header">
+                    <h2>Chi tiết người thuê: <span id="tenant-name-header"></span></h2>
+                    <div>
+                        <button id="back-to-list-btn" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </button>
+                        <button id="room-fees-btn-header" class="btn-primary">
+                            <i class="fas fa-file-invoice-dollar"></i> Thu tiền phòng
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="tenant-info">
+                    <div id="tenant-details"></div>
+                </div>
+
+                <div class="expenses-container">
+                    <h3>Danh sách thu tiền</h3>
+                    <div id="expenses-list">
+                        <!-- Danh sách thu tiền sẽ được hiển thị ở đây -->
+                        </div>
+                    <div id="no-expenses-message" style="display:none;">
+                        <p>Chưa có khoản thu nào. Hãy thêm khoản thu mới!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Phần hiển thị danh sách tất cả người thuê -->
+            <section id="all-tenants-section" class="section">
+                <div class="section-header">
+                    <h2>Danh sách tất cả người thuê</h2>
+                    <button id="add-tenant-global-btn" class="btn-primary">
+                        <i class="fas fa-plus"></i> Thêm người thuê mới
+                    </button>
+                </div>
+                
+                <!-- Search Section -->
+                <div class="search-section">
+                    <div class="search-container">
+                        <div class="search-input-wrapper">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" id="tenant-search-input" placeholder="Tìm kiếm theo tên, số điện thoại, CMND/CCCD..." class="search-input">
+                            <button id="clear-search-btn" class="clear-search-btn" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="search-results-count" id="search-results-count" style="display: none;">
+                            Tìm thấy <span id="results-number">0</span> người thuê
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="all-tenants-list" class="cards-container">
+                    <!-- Danh sách tất cả người thuê sẽ được hiển thị ở đây -->
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <p>Chưa có người thuê nào. Hãy thêm người thuê mới!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Phần in phiếu thu -->
+            <section id="moveout-section" class="section">
+                <div class="section-header">
+                    <h2>Trả phòng</h2>
+                </div>
+                <div class="moveout-panel">
+                    <div class="form-group">
+                        <label for="moveout-tenant-select">Người thuê trả phòng:</label>
+                        <select id="moveout-tenant-select">
+                            <option value="">-- Chọn người thuê --</option>
+                        </select>
+                    </div>
+                    <div class="moveout-actions">
+                        <button id="moveout-declare-btn" class="btn-primary" disabled>
+                            <i class="fas fa-clipboard-check"></i> Khai báo trả phòng
+                        </button>
+                        <button id="moveout-edit-receipt-btn" class="btn-secondary">
+                            <i class="fas fa-pen-to-square"></i> Chỉnh sửa Phiếu trả phòng
+                        </button>
+                    </div>
+                </div>
+                <div id="moveout-room-fees-host" class="moveout-room-fees-host"></div>
+                <div id="moveout-empty-message" class="empty-state">
+                    <i class="fas fa-door-open"></i>
+                    <p>Chọn người thuê và bấm "Khai báo trả phòng" để nhập phiếu trực tiếp.</p>
+                </div>
+
+                <div class="moveout-print-section">
+                    <h3>In phiếu trả phòng</h3>
+                    <div class="moveout-print-form" id="moveout-print-form">
+                        <div class="form-group">
+                            <label for="moveout-payment-period">Kỳ trả phòng:</label>
+                            <select id="moveout-payment-period" disabled>
+                                <option value="">-- Chọn kỳ trả phòng --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="moveout-template-type">Mẫu phiếu:</label>
+                            <select id="moveout-template-type">
+                                <option value="professional">Mẫu chuyên nghiệp</option>
+                                <option value="simple">Mẫu rút gọn</option>
+                            </select>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="preview-moveout-receipt-btn" class="btn-primary" disabled>
+                                <i class="fas fa-eye"></i> Xem trước
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="moveout-receipt-preview" class="receipt-preview" style="display: none;">
+                        <div class="receipt-actions">
+                            <button id="back-to-moveout-form-btn" class="btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </button>
+                            <button id="print-moveout-preview-btn" class="btn-primary">
+                                <i class="fas fa-print"></i> In phiếu trả phòng
+                            </button>
+                            <button id="export-moveout-png-btn" class="btn-success">
+                                <i class="fas fa-download"></i> Xuất PNG
+                            </button>
+                        </div>
+                        <div id="moveout-receipt-content" class="receipt-content">
+                            <!-- Nội dung phiếu trả phòng sẽ được hiển thị ở đây -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div id="moveout-receipts-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Chỉnh sửa Phiếu trả phòng</h3>
+                        <span class="close-modal">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div id="moveout-receipts-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <section id="print-receipt-section" class="section">
+                <div class="section-header">
+                    <h2>In phiếu thu</h2>
+                </div>
+                <div class="print-receipt-form">
+                    <form id="receipt-form">
+                        <div class="form-group">
+                            <label for="receipt-tenant">Chọn người thuê:</label>
+                            <select id="receipt-tenant" required>
+                                <option value="">-- Chọn người thuê --</option>
+                                <!-- Danh sách người thuê sẽ được thêm bằng JavaScript -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="receipt-payment-period">Kỳ thanh toán:</label>
+                            <select id="receipt-payment-period" required disabled>
+                                <option value="">-- Chọn kỳ thanh toán --</option>
+                                <!-- Danh sách kỳ thanh toán sẽ được thêm bằng JavaScript -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="receipt-template-type">Mẫu phiếu thu:</label>
+                            <select id="receipt-template-type" required>
+                                <option value="professional">Mẫu chuyên nghiệp</option>
+                                <option value="simple">Mẫu rút gọn</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="receipt-include-qr">Đính kèm QR Code Tài khoản Ngân hàng:</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <select id="receipt-include-qr" style="width: auto;">
+                                    <option value="no">Không</option>
+                                    <option value="yes">Có</option>
+                                </select>
+                                <button type="button" id="upload-qr-btn" class="btn-secondary" style="display: none; padding: 6px 12px; font-size: 14px;">
+                                    <i class="fas fa-upload"></i> Cập nhật QR Code
+                                </button>
+                                <input type="file" id="qr-file-input" accept="image/*" style="display: none;">
+                                <span id="qr-status" style="font-size: 12px; color: green; display: none;"><i class="fas fa-check-circle"></i> Đang sử dụng 1 QR Code</span>
+                            </div>
+                            <div id="qr-history-container" style="display: none; margin-top: 15px; border: 1px dashed #ccc; padding: 10px; border-radius: 5px; background: #fafafa;">
+                                <p style="font-size: 13px; margin-top: 0; margin-bottom: 8px; color: #555;">Các QR Code đã lưu (click chọn để sử dụng nhanh):</p>
+                                <div id="qr-history-list" style="display: flex; flex-wrap: wrap; gap: 12px;"></div>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="preview-receipt-btn" class="btn-primary">
+                                <i class="fas fa-eye"></i> Xem trước
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="receipt-preview" class="receipt-preview" style="display: none;">
+                    <div class="receipt-actions">
+                        <button id="back-to-receipt-form-btn" class="btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </button>
+                        <button id="print-preview-btn" class="btn-primary">
+                            <i class="fas fa-print"></i> In phiếu thu
+                        </button>
+                        <button id="export-png-preview-btn" class="btn-success">
+                            <i class="fas fa-download"></i> Xuất PNG
+                        </button>
+                    </div>
+                    <div id="receipt-content" class="receipt-content">
+                        <!-- Nội dung phiếu thu sẽ được hiển thị ở đây -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Template phiếu thu (sẽ được sử dụng để in) -->
+            <template id="receipt-template">
+                <div class="receipt-paper">
+                    <div class="receipt-header">
+                        <div class="company-info">
+                            <h1>PHIẾU THU TIỀN PHÒNG</h1>
+                            <div class="receipt-period">
+                                <span id="receipt-month-year"></span>
+                            </div>
+                        </div>
+                        <div class="receipt-date-only">
+                            <p>Ngày: <span id="receipt-date"></span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="tenant-info">
+                        <div class="info-row">
+                            <div class="info-pair">
+                                <span class="label">Họ tên:</span>
+                                <span class="value" id="receipt-tenant-name"></span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="label">Số điện thoại:</span>
+                                <span class="value" id="receipt-tenant-phone"></span>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-pair">
+                                <span class="label">Phòng:</span>
+                                <span class="value" id="receipt-room-name"></span>
+                            </div>
+                            <div class="info-pair">
+                                <span class="label">Nhà:</span>
+                                <span class="value" id="receipt-house-name"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="receipt-content">
+                        <table class="receipt-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Nội dung</th>
+                                    <th>Chi tiết</th>
+                                    <th>Thành tiền (VNĐ)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="receipt-table-body">
+                                <!-- Nội dung sẽ được thêm bằng JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="receipt-summary">
+                        <div class="summary-row" id="receipt-agency-total-row" style="display: none; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px 20px; font-weight: bold; border-bottom: 1px dashed #333; font-size: 19px;">
+                            <span class="summary-label">Tổng các khoản Thu hộ, Chi hộ:</span>
+                            <span class="summary-amount" id="receipt-agency-total-amount"></span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Tổng thanh toán:</span>
+                            <span class="summary-amount" id="receipt-total-amount"></span>
+                        </div>
+                        <div class="summary-text">
+                            <p>Bằng chữ: <span id="receipt-total-text"></span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="receipt-footer">
+                        <div class="signature-section" style="align-items: flex-start;">
+                            <div class="signature-box" style="width: 33%;">
+                                <p class="signature-title">Người thu tiền</p>
+                                <p class="signature-subtitle">(Ký, ghi rõ họ tên)</p>
+                                <div class="signature-space"></div>
+                            </div>
+                            
+                            <div class="qr-code-section" id="receipt-qr-section" style="display: none; text-align: center; width: 33%;">
+                                <img id="receipt-qr-image" src="" alt="QR Code" style="width: 120px; height: 120px; object-fit: contain; border: 1px solid #ccc; padding: 5px; border-radius: 4px;">
+                                <p style="margin: 5px 0 0; font-size: 13px; font-weight: bold; color: #2c3e50;">Thanh toán chuyển khoản</p>
+                            </div>
+
+                            <div class="signature-box" style="width: 33%;">
+                                <p class="signature-title">Người nộp tiền</p>
+                                <p class="signature-subtitle">(Ký, ghi rõ họ tên)</p>
+                                <div class="signature-space"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Template phiếu thu rút gọn -->
+            <template id="receipt-template-simple">
+                <div class="receipt-paper-simple" style="display: flex; align-items: stretch; justify-content: space-between; gap: 20px;">
+                    <div style="flex: 1;">
+                        <div class="simple-header">
+                            <h2 id="simple-tenant-location"></h2>
+                        </div>
+                        
+                        <div class="simple-content">
+                            <div class="simple-item" id="simple-room-item">
+                                <span class="simple-label">Tiền phòng (<span id="simple-period"></span>):</span>
+                                <span class="simple-amount" id="simple-room-amount"></span>
+                            </div>
+
+                            <div class="simple-section-title" id="simple-agency-section-title">Các khoản Thu hộ, Chi hộ</div>
+
+                            <div class="simple-item" id="simple-electricity-item">
+                                <span class="simple-label">Tiền Điện:</span>
+                                <div class="simple-details" id="simple-electricity-details">
+                                    <div>Chỉ số cũ: <span id="simple-electricity-old"></span> - Chỉ số mới: <span id="simple-electricity-new"></span></div>
+                                    <div class="simple-detail-row">
+                                        <span><span id="simple-electricity-consumption"></span> x <span id="simple-electricity-price"></span> = </span>
+                                        <span class="simple-amount" id="simple-electricity-amount"></span>
+                                    </div>
+                                </div>
+                                <div class="simple-details" id="simple-electricity-direct-details" style="display: none;">
+                                    <div>Phí hàng tháng</div>
+                                </div>
+                                <span class="simple-amount" id="simple-electricity-amount-direct" style="display: none;"></span>
+                            </div>
+                            
+                            <!-- Lưu ý tiền điện -->
+                            <div class="simple-notes" id="simple-electricity-notes" style="display: none;">
+                                <div class="notes-content">
+                                    <span class="notes-label">📝 Lưu ý tiền điện:</span>
+                                    <span class="notes-text" id="simple-electricity-notes-text"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="simple-item" id="simple-water-item">
+                                <span class="simple-label">Tiền Nước:</span>
+                                <div class="simple-details" id="simple-water-details">
+                                    <div>Chỉ số cũ: <span id="simple-water-old"></span> - Chỉ số mới: <span id="simple-water-new"></span></div>
+                                    <div class="simple-detail-row">
+                                        <span><span id="simple-water-consumption"></span> x <span id="simple-water-price"></span> = </span>
+                                        <span class="simple-amount" id="simple-water-amount"></span>
+                                    </div>
+                                </div>
+                                <div class="simple-details" id="simple-water-direct-details" style="display: none;">
+                                    <div>Phí hàng tháng</div>
+                                </div>
+                                <span class="simple-amount" id="simple-water-amount-direct" style="display: none;"></span>
+                            </div>
+                            
+                            <!-- Lưu ý tiền nước -->
+                            <div class="simple-notes" id="simple-water-notes" style="display: none;">
+                                <div class="notes-content">
+                                    <span class="notes-label">📝 Lưu ý tiền nước:</span>
+                                    <span class="notes-text" id="simple-water-notes-text"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="simple-item" id="simple-garbage-item">
+                                <span class="simple-label">Tiền Rác:</span>
+                                <div class="simple-details" id="simple-garbage-direct-details" style="display: none;">
+                                    <div>Phí hàng tháng</div>
+                                </div>
+                                <span class="simple-amount" id="simple-garbage-amount"></span>
+                            </div>
+
+                            <div class="simple-item" id="simple-internet-item">
+                                <span class="simple-label">Tiền Internet:</span>
+                                <div class="simple-details" id="simple-internet-direct-details" style="display: none;">
+                                    <div>Phí hàng tháng</div>
+                                </div>
+                                <span class="simple-amount" id="simple-internet-amount"></span>
+                            </div>
+
+                            <!-- Lưu ý khoản thu khác -->
+                            <div class="simple-notes" id="simple-other-notes" style="display: none;">
+                                <div class="notes-content">
+                                    <span class="notes-label">📝 Lưu ý khoản thu khác:</span>
+                                    <span class="notes-text" id="simple-other-notes-text"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="simple-agency-total" id="simple-agency-total-row" style="display: none; justify-content: space-between; align-items: center; margin-top: 15px; padding: 10px 0; border-top: 1px dashed #333; font-weight: bold; font-size: 18px; color: #2c3e50;">
+                                <span class="simple-agency-total-label">Tổng các khoản Thu hộ, Chi hộ:</span>
+                                <span class="simple-agency-total-amount" id="simple-agency-total-amount"></span>
+                            </div>
+                            
+                            <div class="simple-total">
+                                <span class="simple-total-label">Tổng thanh toán:</span>
+                                <span class="simple-total-amount" id="simple-total-amount"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="simple-qr-section" id="simple-qr-section" style="display: none; text-align: center; flex-shrink: 0; padding-left: 20px; border-left: 1px dashed #ccc;">
+                        <img id="simple-qr-image" src="" alt="QR Code" style="width: 140px; height: 140px; object-fit: contain; border: 1px solid #ccc; padding: 5px; border-radius: 4px;">
+                        <p style="margin: 10px 0 0; font-size: 14px; font-weight: bold; color: #2c3e50;">Thanh toán<br>chuyển khoản</p>
+                        <div style="margin-top: 15px; font-size: 14px; color: #555;">
+                            hoặc<br><br>
+                            <span style="font-weight: bold; font-size: 16px; color: #2c3e50;">Tiền mặt</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Phần thống kê -->
+            <section id="stats-section" class="section">
+                <div class="section-header">
+                    <h2>Thống kê thu tiền</h2>
+                </div>
+                <div class="stats-filters">
+                    <div class="filter-group">
+                        <label for="month-filter">Tháng:</label>
+                        <select id="month-filter">
+                            <option value="all">Tất cả</option>
+                            <!-- Các tháng sẽ được thêm bằng JavaScript -->
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="year-filter">Năm:</label>
+                        <select id="year-filter">
+                            <!-- Các năm sẽ được thêm bằng JavaScript -->
+                        </select>
+                    </div>
+                </div>
+                <div id="stats-content">
+                    <div class="stats-summary">
+                        <div class="stat-card">
+                            <h3>Khoản thu cao nhất</h3>
+                            <p id="stats-max">0 VNĐ</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Khoản thu trung bình</h3>
+                            <p id="stats-avg">0 VNĐ</p>
+                        </div>
+                    </div>
+                    <div id="stats-chart-container">
+                        <!-- Biểu đồ sẽ được hiển thị ở đây -->
+                    </div>
+                    <div id="stats-table-container">
+                        <!-- Bảng thống kê sẽ được hiển thị ở đây -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section xuất Excel -->
+            <section id="export-section" class="section">
+                <div class="section-header">
+                    <h2>📊 Xuất dữ liệu Excel</h2>
+                    <p>Chọn loại dữ liệu bạn muốn xuất ra file Excel</p>
+                </div>
+                
+                <div class="export-options">
+                    <div class="export-card">
+                        <div class="export-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="export-content">
+                            <h3>Danh sách nhà</h3>
+                            <p>Xuất thông tin tất cả nhà cho thuê</p>
+                            <button class="btn-primary export-btn" data-type="houses">
+                                <i class="fas fa-download"></i> Xuất Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="export-card">
+                        <div class="export-icon">
+                            <i class="fas fa-door-open"></i>
+                        </div>
+                        <div class="export-content">
+                            <h3>Danh sách phòng</h3>
+                            <p>Xuất thông tin tất cả phòng và trạng thái</p>
+                            <button class="btn-primary export-btn" data-type="rooms">
+                                <i class="fas fa-download"></i> Xuất Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="export-card">
+                        <div class="export-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="export-content">
+                            <h3>Danh sách người thuê</h3>
+                            <p>Xuất thông tin tất cả người thuê</p>
+                            <button class="btn-primary export-btn" data-type="tenants">
+                                <i class="fas fa-download"></i> Xuất Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="export-card">
+                        <div class="export-icon">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="export-content">
+                            <h3>Kỳ thanh toán</h3>
+                            <p>Xuất tất cả khoản thu và kỳ thanh toán</p>
+                            <button class="btn-primary export-btn" data-type="expenses">
+                                <i class="fas fa-download"></i> Xuất Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="export-card">
+                        <div class="export-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="export-content">
+                            <h3>Chi phí nhà</h3>
+                            <p>Xuất tất cả chi phí nhà và hóa đơn</p>
+                            <button class="btn-primary export-btn" data-type="houseExpenses">
+                                <i class="fas fa-download"></i> Xuất Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="export-card">
+                        <div class="export-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="export-content">
+                            <h3>Báo cáo tổng hợp</h3>
+                            <p>Xuất báo cáo tổng hợp tất cả dữ liệu</p>
+                            <button class="btn-primary export-btn" data-type="summary">
+                                <i class="fas fa-download"></i> Xuất Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modal thêm/sửa nhà cho thuê -->
+        <div id="house-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="house-modal-title">Thêm nhà cho thuê mới</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="house-form">
+                        <input type="hidden" id="house-id">
+                        <div class="form-group">
+                            <label for="house-name">Tên nhà:</label>
+                            <input type="text" id="house-name" placeholder="Ví dụ: Nhà ở quận 1, Chung cư ABC,..." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="house-address">Địa chỉ:</label>
+                            <textarea id="house-address" required></textarea>
+                        </div>
+                                                <div class="form-group">
+                            <label for="house-image">URL hình ảnh:</label>
+                            <input type="text" id="house-image" placeholder="Nhập URL hình ảnh hoặc để trống để sử dụng hình mặc định">
+                        </div>
+                        <div class="form-group">
+                            <label for="house-rooms-count">Số phòng cần tạo:</label>
+                            <input type="number" id="house-rooms-count" min="1" value="1">
+                            <small class="form-help">Hệ thống sẽ tự động tạo số phòng này cho nhà (Số 01, 02, 03...)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="house-notes">Ghi chú:</label>
+                            <textarea id="house-notes"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="cancel-house-btn" class="btn-secondary">Hủy</button>
+                            <button type="submit" class="btn-primary">Lưu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal thêm/sửa phòng -->
+        <div id="room-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="room-modal-title">Thêm phòng mới</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="room-form">
+                        <input type="hidden" id="room-id">
+                        <input type="hidden" id="room-house-id">
+                        <div class="form-group">
+                            <label for="room-name">Tên phòng:</label>
+                            <input type="text" id="room-name" placeholder="Ví dụ: Số 01, Số 02,..." required>
+                        </div>
+                        <input type="hidden" id="room-area" value="0">
+                        <div class="form-group">
+                            <label for="room-price">Giá thuê (VNĐ/tháng):</label>
+                            <input type="number" id="room-price" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="room-image">URL hình ảnh:</label>
+                            <input type="text" id="room-image" placeholder="Nhập URL hình ảnh hoặc để trống để sử dụng hình mặc định">
+                        </div>
+                        <div class="form-group">
+                            <label for="room-status">Trạng thái:</label>
+                            <select id="room-status">
+                                <option value="available">Còn trống</option>
+                                <option value="occupied">Đã cho thuê</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="room-notes">Ghi chú:</label>
+                            <textarea id="room-notes"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="cancel-room-btn" class="btn-secondary">Hủy</button>
+                            <button type="submit" class="btn-primary">Lưu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal thêm/sửa người thuê -->
+        <div id="tenant-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="tenant-modal-title">Thêm người thuê mới</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="tenant-form">
+                        <input type="hidden" id="tenant-id">
+                        <div class="form-group">
+                            <label for="tenant-name">Họ tên:</label>
+                            <input type="text" id="tenant-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tenant-phone">Số điện thoại:</label>
+                            <input type="tel" id="tenant-phone">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tenant-id-card">Số CMND/CCCD:</label>
+                            <input type="text" id="tenant-id-card">
+                        </div>
+                        <div class="form-group">
+                            <label for="tenant-room-id">Phòng:</label>
+                            <select id="tenant-room-id">
+                                <option value="">Chọn phòng</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="tenant-rent-start-day">Ngày bắt đầu tính tiền thuê phòng:</label>
+                            <input type="number" id="tenant-rent-start-day" min="1" max="31" placeholder="Ngày trong tháng (1-31)">
+                        </div>
+                        <div class="form-group">
+                            <label for="tenant-rent-end-day">Ngày kết thúc tính tiền thuê phòng (tùy chọn):</label>
+                            <input type="number" id="tenant-rent-end-day" min="1" max="31" placeholder="Ngày trong tháng (1-31)">
+                        </div>
+                        <div class="form-group">
+                            <label for="tenant-initial-deposit">Tiền cọc khi thuê phòng (VNĐ):</label>
+                            <input type="number" id="tenant-initial-deposit" min="0" placeholder="Ví dụ: 5000000">
+                        </div>
+                        <div class="form-group">
+                            <label for="tenant-notes">Ghi chú:</label>
+                            <textarea id="tenant-notes"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="cancel-tenant-btn" class="btn-secondary">Hủy</button>
+                            <button type="submit" class="btn-primary">Lưu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal thêm/sửa chi phí -->
+        <div id="expense-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="expense-modal-title">Thêm khoản thu mới</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="expense-form">
+                        <input type="hidden" id="expense-id">
+                        <input type="hidden" id="expense-tenant-id">
+                        <div class="form-group">
+                            <label for="expense-category">Loại thu:</label>
+                            <select id="expense-category" name="category" required>
+                                <option value="">-- Chọn loại thu --</option>
+                                <option value="rent">Tiền thuê phòng</option>
+                                <option value="electricity">Tiền điện</option>
+                                <option value="water">Tiền nước</option>
+                                <option value="internet">Tiền Internet</option>
+                                <option value="other">Tiền rác</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="expense-from-date">Từ ngày:</label>
+                            <input type="date" id="expense-from-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="expense-to-date">Đến ngày:</label>
+                            <input type="date" id="expense-to-date" required>
+                        </div>
+
+                        <!-- Trường đặc biệt cho điện -->
+                        <div id="electricity-fields" style="display: none;">
+                            <div class="form-group">
+                                <label for="electricity-old-index">Chỉ số cũ (kWh):</label>
+                                <input type="number" id="electricity-old-index" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="electricity-new-index">Chỉ số mới (kWh):</label>
+                                <input type="number" id="electricity-new-index" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="electricity-usage">Mức tiêu thụ (kWh):</label>
+                                <input type="number" id="electricity-usage" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="electricity-unit-price">Đơn giá (VNĐ/kWh):</label>
+                                <input type="number" id="electricity-unit-price" min="0">
+                            </div>
+                        </div>
+
+                        <!-- Trường đặc biệt cho nước -->
+                        <div id="water-fields" style="display: none;">
+                            <div class="form-group">
+                                <label for="water-old-index">Chỉ số cũ (m³):</label>
+                                <input type="number" id="water-old-index" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="water-new-index">Chỉ số mới (m³):</label>
+                                <input type="number" id="water-new-index" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="water-usage">Mức tiêu thụ (m³):</label>
+                                <input type="number" id="water-usage" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="water-unit-price">Đơn giá (VNĐ/m³):</label>
+                                <input type="number" id="water-unit-price" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="expense-amount">Số tiền (VNĐ):</label>
+                            <input type="number" id="expense-amount" required min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="expense-paid-status">Trạng thái thanh toán:</label>
+                            <select id="expense-paid-status" required>
+                                <option value="unpaid">Chưa thanh toán</option>
+                                <option value="paid">Đã thanh toán</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="expense-notes">Ghi chú:</label>
+                            <textarea id="expense-notes"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" id="cancel-expense-btn" class="btn-secondary">Hủy</button>
+                            <button type="submit" class="btn-primary">Lưu</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal chi phí phòng -->
+        <div id="room-fees-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="room-fees-modal-title">Thu tiền phòng</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="room-fees-form">
+                        <input type="hidden" id="room-fees-tenant-id">
+                        <!-- Thông tin tenant và thời gian -->
+                        <div class="room-fees-header">
+                            <div class="tenant-info-summary">
+                                <p>Người thuê: <span id="room-fees-tenant-name"></span></p>
+                                <p>Phòng: <span id="room-fees-room-id"></span></p>
+                                <p>Nhà: <span id="room-fees-house-name"></span></p>
+                            </div>
+                            <div class="time-period-section">
+                                <h4>⏰ Thời gian tính phí</h4>
+                                <div class="date-inputs">
+                                    <div class="form-group">
+                                        <label for="room-fees-from-date">Từ ngày:</label>
+                                        <input type="date" id="room-fees-from-date" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="room-fees-to-date">Đến ngày:</label>
+                                        <input type="date" id="room-fees-to-date" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grid layout cho các loại chi phí -->
+                        <div class="room-fees-grid">
+                            <!-- Cột 1: Tiền điện -->
+                            <div class="fee-card electricity-card">
+                                <h4>⚡ Tiền điện</h4>
+                                <div class="fee-options">
+                                    <label class="radio-option">
+                                        <input type="radio" name="electricity-method" value="consumption" checked>
+                                        <span>Theo chỉ số tiêu thụ</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="electricity-method" value="direct">
+                                        <span>Nhập trực tiếp số tiền</span>
+                                    </label>
+                                </div>
+                                <div class="fee-inputs" id="electricity-consumption-inputs">
+                                    <div class="input-row">
+                                        <div class="form-group">
+                                            <label for="room-fees-electricity-old-index">Chỉ số cũ:</label>
+                                            <input type="number" id="room-fees-electricity-old-index" min="0" step="0.01" placeholder="kWh">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="room-fees-electricity-new-index">Chỉ số mới:</label>
+                                            <input type="number" id="room-fees-electricity-new-index" min="0" step="0.01" placeholder="kWh">
+                                        </div>
+                                    </div>
+                                    <div class="input-row">
+                                        <div class="form-group">
+                                            <label for="room-fees-electricity-unit-price">Đơn giá (VNĐ/kWh):</label>
+                                            <input type="number" id="room-fees-electricity-unit-price" min="0" placeholder="4000">
+                                        </div>
+                                        <div class="form-group result-group">
+                                            <label for="room-fees-electricity-amount">Thành tiền:</label>
+                                            <input type="text" id="room-fees-electricity-amount" readonly class="result-input">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="fee-inputs" id="electricity-direct-inputs" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="room-fees-electricity-direct-amount">Số tiền điện (VNĐ):</label>
+                                        <input type="text" id="room-fees-electricity-direct-amount" placeholder="Nhập số tiền điện">
+                                    </div>
+                                </div>
+                                <div class="fee-notes-section">
+                                    <div class="form-group">
+                                        <label for="room-fees-electricity-notes">📝 Lưu ý tiền điện:</label>
+                                        <textarea id="room-fees-electricity-notes" placeholder="Ghi chú về tiền điện (tùy chọn)"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cột 2: Tiền nước -->
+                            <div class="fee-card water-card">
+                                <h4>💧 Tiền nước</h4>
+                                <div class="fee-options">
+                                    <label class="radio-option">
+                                        <input type="radio" name="water-method" value="consumption" checked>
+                                        <span>Theo chỉ số tiêu thụ</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="water-method" value="direct">
+                                        <span>Nhập trực tiếp số tiền</span>
+                                    </label>
+                                </div>
+                                <div class="fee-inputs" id="water-consumption-inputs">
+                                    <div class="input-row">
+                                        <div class="form-group">
+                                            <label for="room-fees-water-old-index">Chỉ số cũ:</label>
+                                            <input type="number" id="room-fees-water-old-index" min="0" step="0.01" placeholder="m³">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="room-fees-water-new-index">Chỉ số mới:</label>
+                                            <input type="number" id="room-fees-water-new-index" min="0" step="0.01" placeholder="m³">
+                                        </div>
+                                    </div>
+                                    <div class="input-row">
+                                        <div class="form-group">
+                                            <label for="room-fees-water-unit-price">Đơn giá (VNĐ/m³):</label>
+                                            <input type="number" id="room-fees-water-unit-price" min="0" placeholder="25000">
+                                        </div>
+                                        <div class="form-group result-group">
+                                            <label for="room-fees-water-amount">Thành tiền:</label>
+                                            <input type="text" id="room-fees-water-amount" readonly class="result-input">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="fee-inputs" id="water-direct-inputs" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="room-fees-water-direct-amount">Số tiền nước (VNĐ):</label>
+                                        <input type="text" id="room-fees-water-direct-amount" placeholder="Nhập số tiền nước">
+                                    </div>
+                                </div>
+                                <div class="fee-notes-section">
+                                    <div class="form-group">
+                                        <label for="room-fees-water-notes">📝 Lưu ý tiền nước:</label>
+                                        <textarea id="room-fees-water-notes" placeholder="Ghi chú về tiền nước (tùy chọn)"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cột 3: Chi phí khác -->
+                            <div class="fee-card other-fees-card">
+                                <h4>💰 Khoản thu khác</h4>
+                                <div class="fee-inputs">
+                                    <div class="form-group">
+                                        <label for="room-fees-room-price">🏠 Tiền phòng (VNĐ):</label>
+                                        <input type="text" id="room-fees-room-price" min="0" placeholder="5,000,000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="room-fees-garbage">🗑️ Tiền rác (VNĐ):</label>
+                                        <input type="text" id="room-fees-garbage" min="0" placeholder="30,000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="room-fees-internet">🌐 Tiền Internet (VNĐ):</label>
+                                        <input type="text" id="room-fees-internet" min="0" placeholder="200,000">
+                                    </div>
+                                </div>
+                                <div class="fee-notes-section">
+                                    <div class="form-group">
+                                        <label for="room-fees-other-notes">📝 Lưu ý khoản thu khác:</label>
+                                        <textarea id="room-fees-other-notes" placeholder="Ghi chú về khoản thu khác (tùy chọn)"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cột 4: Các khoản đã thu -->
+                            <div class="fee-card refund-card">
+                                <h4>💸 Các khoản đã thu</h4>
+                                <div class="fee-inputs">
+                                    <div class="form-group" id="room-fees-deposit-group">
+                                        <label for="room-fees-deposit">💳 Tiền cọc khi ký hợp đồng thuê phòng (VNĐ):</label>
+                                        <input type="text" id="room-fees-deposit" min="0" placeholder="5,000,000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="room-fees-prepaid-unused">🏠 Tiền phòng đã thanh toán đầu kỳ:</label>
+                                        <input type="text" id="room-fees-prepaid-unused" min="0" placeholder="0">
+                                    </div>
+                                </div>
+                                <div class="fee-notes-section" style="margin-top: 15px;">
+                                    <div class="form-group">
+                                        <label for="room-fees-refund-notes">📝 Lưu ý các khoản đã thu:</label>
+                                        <textarea id="room-fees-refund-notes" placeholder="Ghi chú về các khoản đã thu (tùy chọn)"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tổng cộng và nút hành động trên cùng một hàng -->
+                        <div class="total-and-actions-section">
+                            <div class="total-card-compact">
+                                <h4 id="room-fees-total-title">💯 Tổng cộng</h4>
+                                <div class="total-amount">
+                                    <input type="text" id="room-fees-total" readonly class="total-input">
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" id="save-room-fees-btn" class="btn-primary">Lưu khoản thu</button>
+                                <button type="button" id="cancel-room-fees-btn" class="btn-secondary">Hủy</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal chi phí nhà -->
+        <div id="house-expense-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="house-expense-modal-title">Hóa đơn nhà</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="house-expense-form">
+                        <input type="hidden" id="house-expense-house-id">
+                        <div class="house-fees-header">
+                            <div class="time-period-section">
+                                <h4>⏰ Thời gian tính phí</h4>
+                                <div class="date-inputs">
+                                    <div class="form-group">
+                                        <label for="house-fees-from-date">Từ ngày:</label>
+                                        <input type="date" id="house-fees-from-date" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="house-fees-to-date">Đến ngày:</label>
+                                        <input type="date" id="house-fees-to-date" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="house-fees-grid room-fees-grid">
+                            <!-- Cột 1: Tiền điện -->
+                            <div class="fee-card electricity-card">
+                                <h4>⚡ Tiền điện</h4>
+                                <div class="fee-options">
+                                    <label class="radio-option">
+                                        <input type="radio" name="house-electricity-method" value="consumption" checked>
+                                        <span>Theo chỉ số tiêu thụ</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="house-electricity-method" value="direct">
+                                        <span>Nhập trực tiếp số tiền</span>
+                                    </label>
+                                </div>
+                                <div class="fee-inputs" id="house-electricity-consumption-inputs">
+                                    <div class="input-row">
+                                        <div class="form-group">
+                                            <label for="house-fees-electricity-old-index">Chỉ số cũ:</label>
+                                            <input type="number" id="house-fees-electricity-old-index" min="0" step="0.01" placeholder="kWh">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="house-fees-electricity-new-index">Chỉ số mới:</label>
+                                            <input type="number" id="house-fees-electricity-new-index" min="0" step="0.01" placeholder="kWh">
+                                        </div>
+                                    </div>
+                                    <div class="input-row">
+                                        <div class="form-group">
+                                            <label for="house-fees-electricity-unit-price">Đơn giá (VNĐ/kWh):</label>
+                                            <input type="number" id="house-fees-electricity-unit-price" min="0" placeholder="4000">
+                                        </div>
+                                        <div class="form-group result-group">
+                                            <label for="house-fees-electricity-amount">Thành tiền:</label>
+                                            <input type="text" id="house-fees-electricity-amount" readonly class="result-input">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="fee-inputs" id="house-electricity-direct-inputs" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="house-fees-electricity-direct-amount">Số tiền điện (VNĐ):</label>
+                                        <input type="text" id="house-fees-electricity-direct-amount" placeholder="Nhập số tiền điện">
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Cột 2: Tiền nước -->
+                            <div class="fee-card water-card">
+                                <h4>💧 Tiền nước</h4>
+                                <div class="fee-options">
+                                    <label class="radio-option">
+                                        <input type="radio" name="house-water-method" value="consumption" checked>
+                                        <span>Theo chỉ số tiêu thụ</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="house-water-method" value="direct">
+                                        <span>Nhập trực tiếp số tiền</span>
+                                    </label>
+                                </div>
+                                <div class="fee-inputs" id="house-water-consumption-inputs">
+                                    <div class="input-row">
+                                        <div class="form-group">
+                                            <label for="house-fees-water-old-index">Chỉ số cũ:</label>
+                                            <input type="number" id="house-fees-water-old-index" min="0" step="0.01" placeholder="m³">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="house-fees-water-new-index">Chỉ số mới:</label>
+                                            <input type="number" id="house-fees-water-new-index" min="0" step="0.01" placeholder="m³">
+                                        </div>
+                                    </div>
+                                    <div class="input-row">
+                                        <div class="form-group">
+                                            <label for="house-fees-water-unit-price">Đơn giá (VNĐ/m³):</label>
+                                            <input type="number" id="house-fees-water-unit-price" min="0" placeholder="25000">
+                                        </div>
+                                        <div class="form-group result-group">
+                                            <label for="house-fees-water-amount">Thành tiền:</label>
+                                            <input type="text" id="house-fees-water-amount" readonly class="result-input">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="fee-inputs" id="house-water-direct-inputs" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="house-fees-water-direct-amount">Số tiền nước (VNĐ):</label>
+                                        <input type="text" id="house-fees-water-direct-amount" placeholder="Nhập số tiền nước">
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Cột 3: Chi phí khác -->
+                            <div class="fee-card other-fees-card">
+                                <h4>💰 Khoản chi khác</h4>
+                                <div class="fee-inputs">
+                                    <div class="form-group">
+                                        <label for="house-fees-garbage">🗑️ Tiền rác (VNĐ):</label>
+                                        <input type="text" id="house-fees-garbage" min="0" placeholder="30,000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="house-fees-internet">🌐 Tiền Internet (VNĐ):</label>
+                                        <input type="text" id="house-fees-internet" min="0" placeholder="200,000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="house-fees-phone">📞 Tiền điện thoại (VNĐ):</label>
+                                        <input type="text" id="house-fees-phone" min="0" placeholder="100,000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="house-fees-tv">📺 Tiền truyền hình (VNĐ):</label>
+                                        <input type="text" id="house-fees-tv" min="0" placeholder="100,000">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Tổng cộng và nút hành động -->
+                        <div class="total-and-actions-section">
+                            <div class="total-card-compact">
+                                <h4>💯 Tổng cộng</h4>
+                                <div class="total-amount">
+                                    <input type="text" id="house-fees-total" readonly class="total-input">
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" id="save-house-fees-btn" class="btn-primary">Lưu hóa đơn</button>
+                                <button type="button" id="cancel-house-fees-btn" class="btn-secondary">Hủy</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="house-expense-bill-image">Hình ảnh Hóa Đơn:</label>
+                            <input type="file" id="house-expense-bill-image" accept="image/*">
+                            <div id="house-expense-bill-preview" class="image-preview"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="house-expense-payment-image">Hình ảnh Thanh toán Hóa Đơn:</label>
+                            <input type="file" id="house-expense-payment-image" accept="image/*">
+                            <div id="house-expense-payment-preview" class="image-preview"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="house-expense-notes">Ghi chú:</label>
+                            <textarea id="house-expense-notes"></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trang chi tiết chi phí nhà -->
+        <section id="house-expense-section" class="section">
+            <div class="section-header">
+                <h2>Hóa Đơn Nhà</h2>
+                <button id="back-to-rooms-btn" class="btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</button>
+            </div>
+            <div id="house-expense-info" class="house-expense-info"></div>
+            <div class="house-expense-cards">
+                <div class="expense-card" data-type="electricity">
+                    <div class="expense-card-header">
+                        <h3><i class="fas fa-bolt"></i> Tiền Điện</h3>
+                        <button class="btn-secondary edit-provider-btn" data-type="electricity"><i class="fas fa-edit"></i> Sửa</button>
+                    </div>
+                    <div class="expense-card-info">
+                        <div class="provider-info-item"><b>Đơn vị cung cấp:</b> <span class="provider-name">-</span></div>
+                        <div class="provider-info-item"><b>Mã Khách Hàng:</b> <span class="provider-customer-id">-</span></div>
+                        <div class="provider-info-item"><b>Ngày đóng tiền hàng tháng:</b> <span class="provider-payday">-</span></div>
+                    </div>
+                    <button class="btn-primary expense-type-btn" data-type="electricity">Thêm Hóa Đơn</button>
+                </div>
+                
+                <div class="expense-card" data-type="water">
+                    <div class="expense-card-header">
+                        <h3><i class="fas fa-tint"></i> Tiền Nước</h3>
+                        <button class="btn-secondary edit-provider-btn" data-type="water"><i class="fas fa-edit"></i> Sửa</button>
+                    </div>
+                    <div class="expense-card-info">
+                        <div class="provider-info-item"><b>Đơn vị cung cấp:</b> <span class="provider-name">-</span></div>
+                        <div class="provider-info-item"><b>Mã Khách Hàng:</b> <span class="provider-customer-id">-</span></div>
+                        <div class="provider-info-item"><b>Ngày đóng tiền hàng tháng:</b> <span class="provider-payday">-</span></div>
+                    </div>
+                    <button class="btn-primary expense-type-btn" data-type="water">Thêm Hóa Đơn</button>
+                </div>
+                
+                <div class="expense-card" data-type="garbage">
+                    <div class="expense-card-header">
+                        <h3><i class="fas fa-trash"></i> Tiền Rác</h3>
+                        <button class="btn-secondary edit-provider-btn" data-type="garbage"><i class="fas fa-edit"></i> Sửa</button>
+                    </div>
+                    <div class="expense-card-info">
+                        <div class="provider-info-item"><b>Đơn vị cung cấp:</b> <span class="provider-name">-</span></div>
+                        <div class="provider-info-item"><b>Mã Khách Hàng:</b> <span class="provider-customer-id">-</span></div>
+                        <div class="provider-info-item"><b>Ngày đóng tiền hàng tháng:</b> <span class="provider-payday">-</span></div>
+                    </div>
+                    <button class="btn-primary expense-type-btn" data-type="garbage">Thêm Hóa Đơn</button>
+                </div>
+                
+                <div class="expense-card" data-type="internet">
+                    <div class="expense-card-header">
+                        <h3><i class="fas fa-wifi"></i> Internet</h3>
+                        <button class="btn-secondary edit-provider-btn" data-type="internet"><i class="fas fa-edit"></i> Sửa</button>
+                    </div>
+                    <div class="expense-card-info">
+                        <div class="provider-info-item"><b>Đơn vị cung cấp:</b> <span class="provider-name">-</span></div>
+                        <div class="provider-info-item"><b>Mã Khách Hàng:</b> <span class="provider-customer-id">-</span></div>
+                        <div class="provider-info-item"><b>Ngày đóng tiền hàng tháng:</b> <span class="provider-payday">-</span></div>
+                    </div>
+                    <button class="btn-primary expense-type-btn" data-type="internet">Thêm Hóa Đơn</button>
+                </div>
+                
+                <div class="expense-card" data-type="phone">
+                    <div class="expense-card-header">
+                        <h3><i class="fas fa-phone"></i> Điện Thoại</h3>
+                        <button class="btn-secondary edit-provider-btn" data-type="phone"><i class="fas fa-edit"></i> Sửa</button>
+                    </div>
+                    <div class="expense-card-info">
+                        <div class="provider-info-item"><b>Đơn vị cung cấp:</b> <span class="provider-name">-</span></div>
+                        <div class="provider-info-item"><b>Mã Khách Hàng:</b> <span class="provider-customer-id">-</span></div>
+                        <div class="provider-info-item"><b>Ngày đóng tiền hàng tháng:</b> <span class="provider-payday">-</span></div>
+                    </div>
+                    <button class="btn-primary expense-type-btn" data-type="phone">Thêm Hóa Đơn</button>
+                </div>
+                
+                <div class="expense-card" data-type="tv">
+                    <div class="expense-card-header">
+                        <h3><i class="fas fa-tv"></i> Truyền Hình</h3>
+                        <button class="btn-secondary edit-provider-btn" data-type="tv"><i class="fas fa-edit"></i> Sửa</button>
+                    </div>
+                    <div class="expense-card-info">
+                        <div class="provider-info-item"><b>Đơn vị cung cấp:</b> <span class="provider-name">-</span></div>
+                        <div class="provider-info-item"><b>Mã Khách Hàng:</b> <span class="provider-customer-id">-</span></div>
+                        <div class="provider-info-item"><b>Ngày đóng tiền hàng tháng:</b> <span class="provider-payday">-</span></div>
+                    </div>
+                    <button class="btn-primary expense-type-btn" data-type="tv">Thêm Hóa Đơn</button>
+                </div>
+                
+                <div class="expense-card" data-type="other">
+                    <div class="expense-card-header">
+                        <h3><i class="fas fa-ellipsis-h"></i> Khác</h3>
+                        <button class="btn-secondary edit-provider-btn" data-type="other"><i class="fas fa-edit"></i> Sửa</button>
+                    </div>
+                    <div class="expense-card-info">
+                        <div class="provider-info-item"><b>Đơn vị cung cấp:</b> <span class="provider-name">-</span></div>
+                        <div class="provider-info-item"><b>Mã Khách Hàng:</b> <span class="provider-customer-id">-</span></div>
+                        <div class="provider-info-item"><b>Ngày đóng tiền hàng tháng:</b> <span class="provider-payday">-</span></div>
+                    </div>
+                    <button class="btn-primary expense-type-btn" data-type="other">Thêm Hóa Đơn</button>
+                </div>
+            </div>
+            <div id="house-expense-entry-area"></div>
+            <div id="house-expense-table-area"></div>
+        </section>
+    </div>
+
+    <!-- Modal nhập chi phí nhà - Tiền Điện -->
+    <div id="house-expense-electricity-modal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:800px;">
+        <span class="close" onclick="closeHouseExpenseModal('electricity')">&times;</span>
+        <h3><i class="fas fa-bolt"></i> Khai báo hóa đơn Tiền Điện</h3>
+        <p style="color:#666;font-size:0.9rem;margin-bottom:16px;">Hóa đơn điện áp dụng cho toàn bộ nhà</p>
+        <form class="house-expense-modal-form" data-type="electricity">
+          <div class="modal-form-layout">
+            <div class="modal-form-left">
+              <div class="form-group">
+                <label>Số tiền</label>
+                <div class="input-with-scan">
+                  <input type="number" class="modal-expense-amount" required min="0">
+                  <button type="button" class="scan-btn" onclick="scanBill('electricity')" title="Quét hóa đơn">
+                    <i class="fas fa-camera"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Từ ngày</label>
+                <input type="date" class="modal-expense-from-date">
+              </div>
+              <div class="form-group">
+                <label>Đến ngày</label>
+                <input type="date" class="modal-expense-to-date">
+              </div>
+              <div class="form-group">
+                <label>Ngày thanh toán</label>
+                <input type="date" class="modal-expense-payment-date">
+              </div>
+              <div class="form-group">
+                <label>Ghi chú</label>
+                <textarea class="modal-expense-notes" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="modal-form-right">
+              <div class="form-group">
+                <label>Hiện trạng</label>
+                <div style="margin-top:8px;">
+                  <label style="display:inline-flex;align-items:center;margin-right:20px;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-electricity" value="unpaid" class="modal-expense-status" checked>
+                    <span style="margin-left:6px;">Chưa thanh toán</span>
+                  </label>
+                  <label style="display:inline-flex;align-items:center;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-electricity" value="paid" class="modal-expense-status">
+                    <span style="margin-left:6px;">Đã thanh toán</span>
+                  </label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Hóa Đơn</label>
+                <input type="file" class="modal-expense-bill-image" accept="image/*">
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Thanh toán</label>
+                <input type="file" class="modal-expense-payment-image" accept="image/*">
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:12px;justify-content:flex-end;">
+            <button type="button" class="btn-secondary" onclick="closeHouseExpenseModal('electricity')">Hủy</button>
+            <button type="submit" class="btn-primary">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal nhập chi phí nhà - Tiền Nước -->
+    <div id="house-expense-water-modal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:800px;">
+        <span class="close" onclick="closeHouseExpenseModal('water')">&times;</span>
+        <h3><i class="fas fa-tint"></i> Khai báo hóa đơn Tiền Nước</h3>
+        <p style="color:#666;font-size:0.9rem;margin-bottom:16px;">Hóa đơn nước áp dụng cho toàn bộ nhà</p>
+        <form class="house-expense-modal-form" data-type="water">
+          <div class="modal-form-layout">
+            <div class="modal-form-left">
+              <div class="form-group">
+                <label>Số tiền</label>
+                <div class="input-with-scan">
+                  <input type="number" class="modal-expense-amount" required min="0">
+                  <button type="button" class="scan-btn" onclick="scanBill('water')" title="Quét hóa đơn">
+                    <i class="fas fa-camera"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Từ ngày</label>
+                <input type="date" class="modal-expense-from-date">
+              </div>
+              <div class="form-group">
+                <label>Đến ngày</label>
+                <input type="date" class="modal-expense-to-date">
+              </div>
+              <div class="form-group">
+                <label>Ngày thanh toán</label>
+                <input type="date" class="modal-expense-payment-date">
+              </div>
+              <div class="form-group">
+                <label>Ghi chú</label>
+                <textarea class="modal-expense-notes" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="modal-form-right">
+              <div class="form-group">
+                <label>Hiện trạng</label>
+                <div style="margin-top:8px;">
+                  <label style="display:inline-flex;align-items:center;margin-right:20px;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-water" value="unpaid" class="modal-expense-status" checked>
+                    <span style="margin-left:6px;">Chưa thanh toán</span>
+                  </label>
+                  <label style="display:inline-flex;align-items:center;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-water" value="paid" class="modal-expense-status">
+                    <span style="margin-left:6px;">Đã thanh toán</span>
+                  </label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Hóa Đơn</label>
+                <input type="file" class="modal-expense-bill-image" accept="image/*">
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Thanh toán</label>
+                <input type="file" class="modal-expense-payment-image" accept="image/*">
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:12px;justify-content:flex-end;">
+            <button type="button" class="btn-secondary" onclick="closeHouseExpenseModal('water')">Hủy</button>
+            <button type="submit" class="btn-primary">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal nhập chi phí nhà - Tiền Rác -->
+    <div id="house-expense-garbage-modal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:800px;">
+        <span class="close" onclick="closeHouseExpenseModal('garbage')">&times;</span>
+        <h3><i class="fas fa-trash"></i> Khai báo hóa đơn Tiền Rác</h3>
+        <p style="color:#666;font-size:0.9rem;margin-bottom:16px;">Hóa đơn rác áp dụng cho toàn bộ nhà</p>
+        <form class="house-expense-modal-form" data-type="garbage">
+          <div class="modal-form-layout">
+            <div class="modal-form-left">
+              <div class="form-group">
+                <label>Số tiền</label>
+                <input type="number" class="modal-expense-amount" required min="0">
+              </div>
+              <div class="form-group">
+                <label>Từ ngày</label>
+                <input type="date" class="modal-expense-from-date">
+              </div>
+              <div class="form-group">
+                <label>Đến ngày</label>
+                <input type="date" class="modal-expense-to-date">
+              </div>
+              <div class="form-group">
+                <label>Ngày thanh toán</label>
+                <input type="date" class="modal-expense-payment-date">
+              </div>
+              <div class="form-group">
+                <label>Ghi chú</label>
+                <textarea class="modal-expense-notes" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="modal-form-right">
+              <div class="form-group">
+                <label>Hiện trạng</label>
+                <div style="margin-top:8px;">
+                  <label style="display:inline-flex;align-items:center;margin-right:20px;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-garbage" value="unpaid" class="modal-expense-status" checked>
+                    <span style="margin-left:6px;">Chưa thanh toán</span>
+                  </label>
+                  <label style="display:inline-flex;align-items:center;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-garbage" value="paid" class="modal-expense-status">
+                    <span style="margin-left:6px;">Đã thanh toán</span>
+                  </label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Hóa Đơn</label>
+                <input type="file" class="modal-expense-bill-image" accept="image/*">
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Thanh toán</label>
+                <input type="file" class="modal-expense-payment-image" accept="image/*">
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:12px;justify-content:flex-end;">
+            <button type="button" class="btn-secondary" onclick="closeHouseExpenseModal('garbage')">Hủy</button>
+            <button type="submit" class="btn-primary">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal nhập chi phí nhà - Internet -->
+    <div id="house-expense-internet-modal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:800px;">
+        <span class="close" onclick="closeHouseExpenseModal('internet')">&times;</span>
+        <h3><i class="fas fa-wifi"></i> Khai báo hóa đơn Internet</h3>
+        <p style="color:#666;font-size:0.9rem;margin-bottom:16px;">Hóa đơn internet áp dụng cho toàn bộ nhà</p>
+        <form class="house-expense-modal-form" data-type="internet">
+          <div class="modal-form-layout">
+            <div class="modal-form-left">
+              <div class="form-group">
+                <label>Số tiền</label>
+                <input type="number" class="modal-expense-amount" required min="0">
+              </div>
+              <div class="form-group">
+                <label>Từ ngày</label>
+                <input type="date" class="modal-expense-from-date">
+              </div>
+              <div class="form-group">
+                <label>Đến ngày</label>
+                <input type="date" class="modal-expense-to-date">
+              </div>
+              <div class="form-group">
+                <label>Ngày thanh toán</label>
+                <input type="date" class="modal-expense-payment-date">
+              </div>
+              <div class="form-group">
+                <label>Ghi chú</label>
+                <textarea class="modal-expense-notes" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="modal-form-right">
+              <div class="form-group">
+                <label>Hiện trạng</label>
+                <div style="margin-top:8px;">
+                  <label style="display:inline-flex;align-items:center;margin-right:20px;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-internet" value="unpaid" class="modal-expense-status" checked>
+                    <span style="margin-left:6px;">Chưa thanh toán</span>
+                  </label>
+                  <label style="display:inline-flex;align-items:center;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-internet" value="paid" class="modal-expense-status">
+                    <span style="margin-left:6px;">Đã thanh toán</span>
+                  </label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Hóa Đơn</label>
+                <input type="file" class="modal-expense-bill-image" accept="image/*">
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Thanh toán</label>
+                <input type="file" class="modal-expense-payment-image" accept="image/*">
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:12px;justify-content:flex-end;">
+            <button type="button" class="btn-secondary" onclick="closeHouseExpenseModal('internet')">Hủy</button>
+            <button type="submit" class="btn-primary">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal nhập chi phí nhà - Điện Thoại -->
+    <div id="house-expense-phone-modal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:800px;">
+        <span class="close" onclick="closeHouseExpenseModal('phone')">&times;</span>
+        <h3><i class="fas fa-phone"></i> Khai báo hóa đơn Điện Thoại</h3>
+        <p style="color:#666;font-size:0.9rem;margin-bottom:16px;">Hóa đơn điện thoại áp dụng cho toàn bộ nhà</p>
+        <form class="house-expense-modal-form" data-type="phone">
+          <div class="modal-form-layout">
+            <div class="modal-form-left">
+              <div class="form-group">
+                <label>Số tiền</label>
+                <input type="number" class="modal-expense-amount" required min="0">
+              </div>
+              <div class="form-group">
+                <label>Từ ngày</label>
+                <input type="date" class="modal-expense-from-date">
+              </div>
+              <div class="form-group">
+                <label>Đến ngày</label>
+                <input type="date" class="modal-expense-to-date">
+              </div>
+              <div class="form-group">
+                <label>Ngày thanh toán</label>
+                <input type="date" class="modal-expense-payment-date">
+              </div>
+              <div class="form-group">
+                <label>Ghi chú</label>
+                <textarea class="modal-expense-notes" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="modal-form-right">
+              <div class="form-group">
+                <label>Hiện trạng</label>
+                <div style="margin-top:8px;">
+                  <label style="display:inline-flex;align-items:center;margin-right:20px;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-phone" value="unpaid" class="modal-expense-status" checked>
+                    <span style="margin-left:6px;">Chưa thanh toán</span>
+                  </label>
+                  <label style="display:inline-flex;align-items:center;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-phone" value="paid" class="modal-expense-status">
+                    <span style="margin-left:6px;">Đã thanh toán</span>
+                  </label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Hóa Đơn</label>
+                <input type="file" class="modal-expense-bill-image" accept="image/*">
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Thanh toán</label>
+                <input type="file" class="modal-expense-payment-image" accept="image/*">
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:12px;justify-content:flex-end;">
+            <button type="button" class="btn-secondary" onclick="closeHouseExpenseModal('phone')">Hủy</button>
+            <button type="submit" class="btn-primary">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal nhập chi phí nhà - Truyền Hình -->
+    <div id="house-expense-tv-modal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:800px;">
+        <span class="close" onclick="closeHouseExpenseModal('tv')">&times;</span>
+        <h3><i class="fas fa-tv"></i> Khai báo hóa đơn Truyền Hình</h3>
+        <p style="color:#666;font-size:0.9rem;margin-bottom:16px;">Hóa đơn truyền hình áp dụng cho toàn bộ nhà</p>
+        <form class="house-expense-modal-form" data-type="tv">
+          <div class="modal-form-layout">
+            <div class="modal-form-left">
+              <div class="form-group">
+                <label>Số tiền</label>
+                <input type="number" class="modal-expense-amount" required min="0">
+              </div>
+              <div class="form-group">
+                <label>Từ ngày</label>
+                <input type="date" class="modal-expense-from-date">
+              </div>
+              <div class="form-group">
+                <label>Đến ngày</label>
+                <input type="date" class="modal-expense-to-date">
+              </div>
+              <div class="form-group">
+                <label>Ngày thanh toán</label>
+                <input type="date" class="modal-expense-payment-date">
+              </div>
+              <div class="form-group">
+                <label>Ghi chú</label>
+                <textarea class="modal-expense-notes" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="modal-form-right">
+              <div class="form-group">
+                <label>Hiện trạng</label>
+                <div style="margin-top:8px;">
+                  <label style="display:inline-flex;align-items:center;margin-right:20px;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-tv" value="unpaid" class="modal-expense-status" checked>
+                    <span style="margin-left:6px;">Chưa thanh toán</span>
+                  </label>
+                  <label style="display:inline-flex;align-items:center;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-tv" value="paid" class="modal-expense-status">
+                    <span style="margin-left:6px;">Đã thanh toán</span>
+                  </label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Hóa Đơn</label>
+                <input type="file" class="modal-expense-bill-image" accept="image/*">
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Thanh toán</label>
+                <input type="file" class="modal-expense-payment-image" accept="image/*">
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:12px;justify-content:flex-end;">
+            <button type="button" class="btn-secondary" onclick="closeHouseExpenseModal('tv')">Hủy</button>
+            <button type="submit" class="btn-primary">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal nhập chi phí nhà - Khác -->
+    <div id="house-expense-other-modal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:800px;">
+        <span class="close" onclick="closeHouseExpenseModal('other')">&times;</span>
+        <h3><i class="fas fa-ellipsis-h"></i> Khai báo hóa đơn Khác</h3>
+        <p style="color:#666;font-size:0.9rem;margin-bottom:16px;">Hóa đơn khác áp dụng cho toàn bộ nhà</p>
+        <form class="house-expense-modal-form" data-type="other">
+          <div class="modal-form-layout">
+            <div class="modal-form-left">
+              <div class="form-group">
+                <label>Số tiền</label>
+                <input type="number" class="modal-expense-amount" required min="0">
+              </div>
+              <div class="form-group">
+                <label>Từ ngày</label>
+                <input type="date" class="modal-expense-from-date">
+              </div>
+              <div class="form-group">
+                <label>Đến ngày</label>
+                <input type="date" class="modal-expense-to-date">
+              </div>
+              <div class="form-group">
+                <label>Ngày thanh toán</label>
+                <input type="date" class="modal-expense-payment-date">
+              </div>
+              <div class="form-group">
+                <label>Ghi chú</label>
+                <textarea class="modal-expense-notes" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="modal-form-right">
+              <div class="form-group">
+                <label>Hiện trạng</label>
+                <div style="margin-top:8px;">
+                  <label style="display:inline-flex;align-items:center;margin-right:20px;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-other" value="unpaid" class="modal-expense-status" checked>
+                    <span style="margin-left:6px;">Chưa thanh toán</span>
+                  </label>
+                  <label style="display:inline-flex;align-items:center;cursor:pointer;">
+                    <input type="radio" name="modal-expense-status-other" value="paid" class="modal-expense-status">
+                    <span style="margin-left:6px;">Đã thanh toán</span>
+                  </label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Hóa Đơn</label>
+                <input type="file" class="modal-expense-bill-image" accept="image/*">
+              </div>
+              <div class="form-group">
+                <label>Hình ảnh Thanh toán</label>
+                <input type="file" class="modal-expense-payment-image" accept="image/*">
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:12px;justify-content:flex-end;">
+            <button type="button" class="btn-secondary" onclick="closeHouseExpenseModal('other')">Hủy</button>
+            <button type="submit" class="btn-primary">Lưu</button>
+          </div>
+        </form>
+        </div>
+    </div>
+
+    <!-- Thêm thư viện Chart.js để vẽ biểu đồ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="js/core.js"></script>
+    <script src="js/houses.js"></script>
+    <script src="js/tenants.js"></script>
+    <script src="js/modals.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/ocr.js"></script>
+    <script src="js/back-buttons.js"></script>
+    <script src="js/app.js"></script>
+    <script src="mobile-optimization.js"></script>
+</body>
+</html> 

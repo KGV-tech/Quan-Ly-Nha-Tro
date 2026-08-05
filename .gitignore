@@ -1,0 +1,7 @@
+# Local upload/cache state
+.tmp.driveupload/
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+*.tmp

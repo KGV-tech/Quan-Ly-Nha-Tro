@@ -1,0 +1,18 @@
+Để thay đổi màu ở phần Tổng thành tiền của Phiếu thu "mẫu rút gọn":
+- Mở file style.css
+- Tìm dòng simple-total -> dòng background (khoảng dòng 865)
+- Rồi chọn màu thay thế.
+- Bấm "Ctrl + S" để lưu thay đổi.
+
+	#D8BBFF
+	#D0FFD6
+	#FAD4A1
+	#C2D5FF
+	#E5E5E5
+	#3CC9FC
+	#F7EDE2
+	#B2F7EF
+	#FFCBAF
+	#95F9E3
+	#F4ACB7
+	#7589f9
