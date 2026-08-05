@@ -248,7 +248,7 @@ function hideAllSections() {
     }
 }
 
-function showSection(sectionId) {
+function showSectionByIdLegacy(sectionId) {
     try {
         hideAllSections();
         
@@ -316,7 +316,7 @@ function calculateTotalExpense(tenantId) {
 }
 
 // Currency input handlers
-function handleCurrencyInput(inputElement) {
+function handleLegacyCurrencyInput(inputElement) {
     let value = inputElement.value.replace(/[^\d]/g, '');
     if (value) {
         value = parseInt(value).toLocaleString('vi-VN');
@@ -324,7 +324,7 @@ function handleCurrencyInput(inputElement) {
     }
 }
 
-function handleCurrencyBlur(inputElement) {
+function handleLegacyCurrencyBlur(inputElement) {
     const value = inputElement.value;
     if (value) {
         const numericValue = parseCurrency(value);

@@ -158,18 +158,11 @@ function isMoveoutRoomFeeExpense(expense) {
 }
 
 function isTenantMovedOut(tenant) {
-    return tenant.status === 'moved_out' || Boolean(tenant.moveOutDate) || Boolean(tenant.endDate);
+    return RentalBusinessRules.isTenantMovedOut(tenant);
 }
 
 function getRoomDisplayOrder(room) {
-    const name = room?.name || '';
-    const floorMatch = name.match(/lầu\s*(\d+)/i);
-    const numberMatch = name.match(/số\s*(\d+)/i);
-    return {
-        floor: floorMatch ? Number(floorMatch[1]) : Number.MAX_SAFE_INTEGER,
-        number: numberMatch ? Number(numberMatch[1]) : Number.MAX_SAFE_INTEGER,
-        name
-    };
+    return RentalBusinessRules.getRoomDisplayOrder(room);
 }
 
 function compareTenantsByRoom(a, b) {
@@ -2417,8 +2410,7 @@ function syncRoomStatusWithTenants() {
     
     rooms.forEach(room => {
         // Người đã trả phòng vẫn được lưu trong lịch sử, nhưng không được tính là đang ở phòng.
-        const tenantsInRoom = tenants.filter(tenant => tenant.roomId === room.id && !isTenantMovedOut(tenant));
-        const shouldBeOccupied = tenantsInRoom.length > 0;
+        const shouldBeOccupied = RentalBusinessRules.isRoomOccupied(room.id, tenants);
         const currentStatus = room.status;
         const newStatus = shouldBeOccupied ? 'occupied' : 'available';
         

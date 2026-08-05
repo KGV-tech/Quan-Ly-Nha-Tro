@@ -48,29 +48,6 @@ function updateHouse(updatedHouse) {
     }
 }
 
-function deleteHouse(houseId) {
-    const rooms = getRoomsFromLocalStorage();
-    const roomIds = rooms.filter(r => r.houseId === houseId).map(r => r.id);
-    
-    saveRoomsToLocalStorage(rooms.filter(r => r.houseId !== houseId));
-    saveTenantsToLocalStorage(getTenantsFromLocalStorage().filter(t => !roomIds.includes(t.roomId)));
-    saveHousesToLocalStorage(getHousesFromLocalStorage().filter(h => h.id !== houseId));
-    
-    // Cập nhật giao diện tùy theo section hiện tại
-    const homeSection = document.getElementById('home-section');
-    const allRoomsSection = document.getElementById('all-rooms-section');
-    
-    if (homeSection && homeSection.classList.contains('active')) {
-        renderDashboard();
-    } else {
-        renderHousesList(); // Cho trang danh sách phòng
-    }
-    
-    if (allRoomsSection && allRoomsSection.classList.contains('active')) {
-        renderAllRoomsList();
-    }
-}
-
 // Rooms CRUD operations
 function getRoomById(roomId) {
     return getRoomsFromLocalStorage().find(r => r.id === roomId);
@@ -106,19 +83,6 @@ function updateRoom(updatedRoom) {
             if (currentRoomId === updatedRoom.id) showRoomDetails(updatedRoom.id);
         }
     }
-}
-
-function deleteRoom(roomId) {
-    // Lấy thông tin phòng trước khi xóa để biết houseId
-    const room = getRoomById(roomId);
-    
-    // Xóa người thuê của phòng này
-    saveTenantsToLocalStorage(getTenantsFromLocalStorage().filter(t => t.roomId !== roomId));
-    
-    // Xóa phòng
-    saveRoomsToLocalStorage(getRoomsFromLocalStorage().filter(r => r.id !== roomId));
-    
-    
 }
 
 // Render functions
@@ -163,9 +127,6 @@ function renderHousesList() {
                     <button class="btn-secondary edit-house-list-btn" data-house-id="${house.id}">
                         <i class="fas fa-edit"></i> Sửa
                     </button>
-                    <button class="btn-danger delete-house-list-btn" data-house-id="${house.id}">
-                        <i class="fas fa-trash"></i> Xóa
-                    </button>
                     <button class="btn-primary view-rooms-btn" data-house-id="${house.id}">
                         <i class="fas fa-door-open"></i> Xem nhà
                     </button>
@@ -179,13 +140,6 @@ function renderHousesList() {
         houseItem.querySelector('.edit-house-list-btn').onclick = (e) => {
             e.stopPropagation();
             openHouseModal(house.id);
-        };
-        
-        houseItem.querySelector('.delete-house-list-btn').onclick = (e) => {
-            e.stopPropagation();
-            if (confirm(`Xóa nhà "${house.name}" và tất cả phòng bên trong?`)) {
-                deleteHouse(house.id);
-            }
         };
         
         houseItem.querySelector('.view-rooms-btn').onclick = (e) => {
@@ -240,24 +194,6 @@ function getHouseTitleThemeClass(houseId) {
 
     const houseIndex = houses.findIndex(item => item.id === houseId);
     return houseIndex >= 0 && houseIndex % 2 === 1 ? 'house-title-green' : 'house-title-orange';
-}
-
-function compareRoomsByDisplayOrder(roomA, roomB) {
-    const getOrder = room => {
-        const name = room?.name || '';
-        const floorMatch = name.match(/lầu\s*(\d+)/i);
-        const numberMatch = name.match(/số\s*(\d+)/i);
-        return {
-            floor: floorMatch ? Number(floorMatch[1]) : Number.MAX_SAFE_INTEGER,
-            number: numberMatch ? Number(numberMatch[1]) : Number.MAX_SAFE_INTEGER,
-            name
-        };
-    };
-    const first = getOrder(roomA);
-    const second = getOrder(roomB);
-    return first.floor - second.floor ||
-        first.number - second.number ||
-        first.name.localeCompare(second.name, 'vi');
 }
 
 // Render tổng quan nhà cho thuê
@@ -337,9 +273,6 @@ function renderHousesOverview() {
                 <button class="overview-action-btn edit-btn" data-house-id="${house.id}">
                     <i class="fas fa-edit"></i> Sửa
                 </button>
-                <button class="overview-action-btn delete-btn" data-house-id="${house.id}">
-                    <i class="fas fa-trash"></i> Xóa
-                </button>
                 <button class="overview-action-btn view-btn" data-house-id="${house.id}">
                     <i class="fas fa-door-open"></i> Xem nhà
                 </button>
@@ -348,21 +281,11 @@ function renderHousesOverview() {
         
         // Event listeners cho các nút actions
         const editBtn = houseCard.querySelector('.edit-btn');
-        const deleteBtn = houseCard.querySelector('.delete-btn');
         const viewBtn = houseCard.querySelector('.view-btn');
         
         editBtn.onclick = (e) => {
             e.stopPropagation();
             openHouseModal(house.id);
-        };
-        
-        deleteBtn.onclick = (e) => {
-            e.stopPropagation();
-            if (confirm(`Xóa nhà "${house.name}" và tất cả phòng bên trong?`)) {
-                deleteHouse(house.id);
-                // Cập nhật lại dashboard sau khi xóa
-                renderDashboard();
-            }
         };
         
         viewBtn.onclick = (e) => {
@@ -409,7 +332,7 @@ function renderAllRoomsList() {
     
     houses.forEach(house => {
         const housesRooms = allRooms.filter(r => r.houseId === house.id);
-        housesRooms.sort(compareRoomsByDisplayOrder);
+        housesRooms.sort(RentalBusinessRules.compareRoomsByDisplayOrder);
         
         const houseGroup = document.createElement('div');
         houseGroup.className = 'room-house-column';

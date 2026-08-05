@@ -450,71 +450,8 @@ function saveHouse() {
             const additionalRooms = roomsCount - currentRoomsCount;
             createAdditionalRoomsForHouse(houseId, currentRoomsCount + 1, additionalRooms, name);
         } else if (roomsCount < currentRoomsCount) {
-            // Giảm số phòng - logic đơn giản và an toàn
-            const roomsToDelete = currentRoomsCount - roomsCount;
-
-            
-            // Tìm phòng có thể xóa (trống, theo format "Số XX")
-            const emptyRooms = currentRooms.filter(room => {
-                // Kiểm tra format tên
-                const isNumberFormat = /^Số \d+$/.test(room.name);
-                if (!isNumberFormat) {
-                    return false;
-                }
-                
-                // Kiểm tra có người thuê không
-                const tenants = getTenantsFromLocalStorage().filter(t => t.roomId === room.id);
-                if (tenants.length > 0) {
-                    return false;
-                }
-                
-                return true;
-            });
-            
-
-            
-            if (emptyRooms.length === 0) {
-                alert('Không thể xóa phòng nào vì tất cả phòng đều có người thuê hoặc không theo format "Số XX"');
-                return;
-            }
-            
-            // Sắp xếp theo số phòng giảm dần (xóa từ số lớn nhất)
-            emptyRooms.sort((a, b) => {
-                const aNum = parseInt(a.name.replace('Số ', ''));
-                const bNum = parseInt(b.name.replace('Số ', ''));
-                return bNum - aNum;
-            });
-            
-            // Lấy danh sách phòng cần xóa
-            const roomsToDeleteList = emptyRooms.slice(0, roomsToDelete);
-            
-            // Xác nhận với người dùng
-            const confirmMsg = `Bạn có chắc muốn xóa ${roomsToDeleteList.length} phòng sau?\n${roomsToDeleteList.map(r => r.name).join(', ')}`;
-            if (!confirm(confirmMsg)) {
-                return;
-            }
-            
-            // Thực hiện xóa
-            let deletedCount = 0;
-            
-            for (const room of roomsToDeleteList) {
-                // Xóa người thuê (nếu có)
-                const currentTenants = getTenantsFromLocalStorage();
-                const newTenants = currentTenants.filter(t => t.roomId !== room.id);
-                saveTenantsToLocalStorage(newTenants);
-                
-                // Xóa phòng
-                const currentRooms = getRoomsFromLocalStorage();
-                const newRooms = currentRooms.filter(r => r.id !== room.id);
-                saveRoomsToLocalStorage(newRooms);
-                
-                deletedCount++;
-            }
-            
-            // Hiển thị thông báo
-            setTimeout(() => {
-                alert(`Đã xóa ${deletedCount} phòng thành công!`);
-            }, 100);
+            alert('Không thể giảm số lượng phòng vì ứng dụng không hỗ trợ xóa phòng để bảo toàn lịch sử dữ liệu.');
+            return;
         }
     } else {
         // Add mode - tạo nhà và tự động tạo phòng
