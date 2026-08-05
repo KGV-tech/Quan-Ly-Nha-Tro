@@ -150,6 +150,13 @@ function calculateTotalExpense(tenantId) {
 // ROOM FEES LOGIC (WHERE DUPLICATE ISSUE IS)
 // ===========================================
 
+// Phiếu thu tiền phòng và phiếu trả phòng là hai luồng dữ liệu độc lập.
+function isMoveoutRoomFeeExpense(expense) {
+    return expense.receiptType === 'moveout' ||
+        expense.category === 'deposit' ||
+        expense.category === 'prepaid_unused';
+}
+
 function openRoomFeesModal(tenantId, options) {
     const mode = options && options.mode ? options.mode : 'add';
     const tenant = getTenantsFromLocalStorage().find(t => t.id === tenantId);
@@ -202,9 +209,20 @@ function openRoomFeesModal(tenantId, options) {
             : 'Thu tiền phòng';
     }
     const isMoveoutMode = !!(roomFeesModal && roomFeesModal.classList.contains('inline-room-fees'));
-    const depositGroup = document.getElementById('room-fees-deposit-group');
-    if (depositGroup) {
-        depositGroup.style.display = isMoveoutMode ? 'block' : 'none';
+    const refundCard = document.getElementById('room-fees-refund-card');
+    if (refundCard) {
+        refundCard.style.display = isMoveoutMode ? 'block' : 'none';
+    }
+    if (!isMoveoutMode) {
+        ['room-fees-deposit', 'room-fees-prepaid-unused'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.value = '';
+                input.setAttribute('data-value', 0);
+            }
+        });
+        const refundNotes = document.getElementById('room-fees-refund-notes');
+        if (refundNotes) refundNotes.value = '';
     }
     
     // Thiết lập thời gian mặc định chỉ khi thêm mới
@@ -276,14 +294,15 @@ function openRoomFeesModal(tenantId, options) {
             internetInput.value = formatCurrency(defaults.internet);
             internetInput.setAttribute('data-value', defaults.internet);
         }
-        if (depositInput) {
+        if (isMoveoutMode && depositInput) {
             depositInput.value = formatCurrency(defaults.deposit);
             depositInput.setAttribute('data-value', defaults.deposit);
         }
     }
 
-    // Nếu có phiếu thu mới nhất thì dùng dữ liệu đó để khai báo
-    if (mode === 'add') {
+    // Chỉ phiếu thu tiền phòng mới có thể kế thừa kỳ thu tiền phòng trước đó.
+    // Phiếu trả phòng luôn được khai báo độc lập.
+    if (mode === 'add' && !isMoveoutMode) {
         const latestReceipt = getLatestReceiptDataForTenant(tenantId);
         if (latestReceipt) {
             const fromDateEl = document.getElementById('room-fees-from-date');
@@ -304,7 +323,6 @@ function openRoomFeesModal(tenantId, options) {
             const rent = latestReceipt.items.find(i => i.category === 'rent');
             const garbage = latestReceipt.items.find(i => i.category === 'other');
             const internet = latestReceipt.items.find(i => i.category === 'internet');
-            const deposit = latestReceipt.items.find(i => i.category === 'deposit');
 
             const electricityNotesEl = document.getElementById('room-fees-electricity-notes');
             const waterNotesEl = document.getElementById('room-fees-water-notes');
@@ -357,16 +375,16 @@ function openRoomFeesModal(tenantId, options) {
             setCurrencyField('room-fees-room-price', rent ? rent.amount : defaults.roomPrice);
             setCurrencyField('room-fees-garbage', garbage ? garbage.amount : defaults.garbage);
             setCurrencyField('room-fees-internet', internet ? internet.amount : defaults.internet);
-            setCurrencyField('room-fees-deposit', deposit ? deposit.amount : defaults.deposit);
+            if (isMoveoutMode) setCurrencyField('room-fees-deposit', defaults.deposit);
 
-            const mergedOtherNotes = [rent?.notes, garbage?.notes, internet?.notes, deposit?.notes]
+            const mergedOtherNotes = [rent?.notes, garbage?.notes, internet?.notes]
                 .map(stripNotePrefix)
                 .find(Boolean) || '';
             if (otherNotesEl) otherNotesEl.value = mergedOtherNotes;
         } else {
             // Không có phiếu cũ thì dùng tiền cọc từ hồ sơ người thuê
             const depositInput = document.getElementById('room-fees-deposit');
-            if (depositInput) {
+            if (isMoveoutMode && depositInput) {
                 depositInput.value = formatCurrency(defaults.deposit);
                 depositInput.setAttribute('data-value', defaults.deposit);
             }
@@ -400,7 +418,7 @@ function getLatestReceiptDataForTenant(tenantId) {
     const expenses = getExpensesFromLocalStorage().filter(expense => {
         if (expense.tenantId !== tenantId) return false;
         // Ưu tiên lấy phiếu thu phòng thông thường gần nhất; bỏ phiếu trả phòng
-        if (expense.receiptType === 'moveout') return false;
+        if (isMoveoutRoomFeeExpense(expense)) return false;
         return true;
     });
     if (!expenses.length) return null;
@@ -715,10 +733,10 @@ function saveRoomFees() {
                 if ((parseInt(document.getElementById('room-fees-internet').getAttribute('data-value')) || 0) > 0 || (document.getElementById('room-fees-other-notes')?.value?.trim() || '')) {
                     currentItems.push({ category: 'internet', amount: parseFloat(document.getElementById('room-fees-internet').getAttribute('data-value')) || 0, method: null, oldIndex: null, newIndex: null, unitPrice: null, notes: (document.getElementById('room-fees-other-notes')?.value?.trim() ? `📝 Lưu ý: ${document.getElementById('room-fees-other-notes').value.trim()}` : '') });
                 }
-                if ((parseInt(document.getElementById('room-fees-deposit')?.getAttribute('data-value')) || 0) > 0 || (document.getElementById('room-fees-refund-notes')?.value?.trim() || '')) {
+                if (isMoveoutReceipt && ((parseInt(document.getElementById('room-fees-deposit')?.getAttribute('data-value')) || 0) > 0 || (document.getElementById('room-fees-refund-notes')?.value?.trim() || ''))) {
                     currentItems.push({ category: 'deposit', amount: parseFloat(document.getElementById('room-fees-deposit').getAttribute('data-value')) || 0, method: null, oldIndex: null, newIndex: null, unitPrice: null, notes: (document.getElementById('room-fees-refund-notes')?.value?.trim() ? `📝 Lưu ý: ${document.getElementById('room-fees-refund-notes').value.trim()}` : '') });
                 }
-                if ((parseInt(document.getElementById('room-fees-prepaid-unused')?.getAttribute('data-value')) || 0) > 0) {
+                if (isMoveoutReceipt && (parseInt(document.getElementById('room-fees-prepaid-unused')?.getAttribute('data-value')) || 0) > 0) {
                     currentItems.push({ category: 'prepaid_unused', amount: parseFloat(document.getElementById('room-fees-prepaid-unused').getAttribute('data-value')) || 0, method: null, oldIndex: null, newIndex: null, unitPrice: null, notes: '' });
                 }
                 // Electricity
@@ -792,7 +810,8 @@ function saveRoomFees() {
             const existingInTimeRange = expenses.filter(expense => 
                 expense.tenantId === tenantId && 
                 expense.fromDate === fromDate && 
-                expense.toDate === toDate
+                expense.toDate === toDate &&
+                isMoveoutRoomFeeExpense(expense) === isMoveoutReceipt
             );
             
             if (existingInTimeRange.length > 0) {
@@ -802,7 +821,8 @@ function saveRoomFees() {
                     expenses = expenses.filter(expense => 
                         !(expense.tenantId === tenantId && 
                           expense.fromDate === fromDate && 
-                          expense.toDate === toDate)
+                          expense.toDate === toDate &&
+                          isMoveoutRoomFeeExpense(expense) === isMoveoutReceipt)
                     );
                 } else {
                     // User cancelled, stop here
@@ -1438,7 +1458,9 @@ function renderExpensesList(tenantId) {
         }
     }
     
-    const expenses = getExpensesForTenant(tenantId);
+    // The tenant detail page lists only ordinary room-fee receipts. Move-out
+    // receipts, including "Các khoản đã thu", belong exclusively to Trả phòng.
+    const expenses = getExpensesForTenant(tenantId).filter(expense => !isMoveoutRoomFeeExpense(expense));
     
     if (expenses.length === 0) {
         expensesListEl.innerHTML = `
@@ -1858,7 +1880,7 @@ function toggleTimeGroupStatus(timeKey, newStatus, tenantId) {
                 }
             }
             
-            return matchesTenant && expenseTimeKey === timeKey;
+            return matchesTenant && !isMoveoutRoomFeeExpense(expense) && expenseTimeKey === timeKey;
         });
         
         if (timeGroupExpenses.length > 0) {
@@ -2529,4 +2551,3 @@ function setupBackButtonListener() {
         }, 100);
     }
 }
-
