@@ -88,7 +88,8 @@ function setupBackButton(buttonId, buttonElement) {
             // Some older navigation helpers use a different section-id format.
             // Verify the requested destination so a back action can never leave
             // the user on an empty screen.
-            const target = document.getElementById(config.targetSection + '-section');
+            const targetId = config.targetSection === 'rooms' ? 'all-rooms-section' : config.targetSection + '-section';
+            const target = document.getElementById(targetId);
             if (target && !target.classList.contains('active')) {
                 document.querySelectorAll('main > section').forEach(section => section.classList.remove('active'));
                 target.classList.add('active');
@@ -104,7 +105,8 @@ function setupBackButton(buttonId, buttonElement) {
                     houseExpenseSection.classList.remove('active');
                 }
                 
-                const section = document.getElementById(config.targetSection + '-section');
+                const sectionId = config.targetSection === 'rooms' ? 'all-rooms-section' : config.targetSection + '-section';
+                const section = document.getElementById(sectionId);
                 if (section) {
                     document.querySelectorAll('main > section').forEach(s => s.classList.remove('active'));
                     section.classList.add('active');

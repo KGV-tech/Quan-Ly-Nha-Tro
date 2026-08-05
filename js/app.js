@@ -476,14 +476,18 @@ function showSection(sectionName) {
         houseExpenseSection.classList.remove('active');
     }
     
-    const section = document.getElementById(sectionName + '-section');
+    // "Danh sách phòng" dùng id all-rooms-section, còn router dùng tên ngắn rooms.
+    // Ánh xạ rõ ràng để Quay lại từ chi tiết phòng không dẫn đến một section không tồn tại.
+    const sectionId = sectionName === 'rooms' ? 'all-rooms-section' : sectionName + '-section';
+    const section = document.getElementById(sectionId);
     if (section) {
         section.classList.add('active');
     }
     
     // Update navigation
     document.querySelectorAll('nav a').forEach(nav => nav.classList.remove('active'));
-    const navSectionName = sectionName === 'all-tenants' ? 'tenants' : sectionName;
+    const navSectionName = sectionName === 'all-tenants' ? 'tenants' :
+        sectionName === 'all-rooms' ? 'rooms' : sectionName;
     const navElement = document.getElementById('nav-' + navSectionName);
     if (navElement) {
         navElement.classList.add('active');

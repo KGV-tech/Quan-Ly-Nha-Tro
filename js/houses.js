@@ -242,6 +242,24 @@ function getHouseTitleThemeClass(houseId) {
     return houseIndex >= 0 && houseIndex % 2 === 1 ? 'house-title-green' : 'house-title-orange';
 }
 
+function compareRoomsByDisplayOrder(roomA, roomB) {
+    const getOrder = room => {
+        const name = room?.name || '';
+        const floorMatch = name.match(/lầu\s*(\d+)/i);
+        const numberMatch = name.match(/số\s*(\d+)/i);
+        return {
+            floor: floorMatch ? Number(floorMatch[1]) : Number.MAX_SAFE_INTEGER,
+            number: numberMatch ? Number(numberMatch[1]) : Number.MAX_SAFE_INTEGER,
+            name
+        };
+    };
+    const first = getOrder(roomA);
+    const second = getOrder(roomB);
+    return first.floor - second.floor ||
+        first.number - second.number ||
+        first.name.localeCompare(second.name, 'vi');
+}
+
 // Render tổng quan nhà cho thuê
 function renderHousesOverview() {
     const housesOverviewEl = document.getElementById('houses-overview');
@@ -391,7 +409,7 @@ function renderAllRoomsList() {
     
     houses.forEach(house => {
         const housesRooms = allRooms.filter(r => r.houseId === house.id);
-        housesRooms.sort((a, b) => a.name.localeCompare(b.name, 'vi', { numeric: true, sensitivity: 'base' }));
+        housesRooms.sort(compareRoomsByDisplayOrder);
         
         const houseGroup = document.createElement('div');
         houseGroup.className = 'room-house-column';
@@ -425,9 +443,12 @@ function renderAllRoomsList() {
             `;
         } else {
             housesRooms.forEach(room => {
+                const activeTenants = getTenantsForRoom(room.id).filter(tenant => !isTenantMovedOut(tenant));
                 const roomButton = document.createElement('button');
                 roomButton.className = 'tenant-name-link room-name-link';
-                roomButton.innerHTML = `<span><i class="fas fa-door-closed"></i> ${room.name}</span>`;
+                roomButton.innerHTML = activeTenants.length
+                    ? `<span><i class="fas fa-door-closed"></i> ${room.name}</span><small class="room-occupied-label">Đã thuê · ${activeTenants.map(tenant => tenant.name).join(', ')}</small>`
+                    : `<span><i class="fas fa-door-open"></i> ${room.name}</span><small class="room-available-label">Phòng trống</small>`;
                 roomButton.onclick = () => showRoomDetails(room.id);
                 roomsList.appendChild(roomButton);
             });
