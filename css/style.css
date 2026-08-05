@@ -1895,10 +1895,11 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
 
 /* Tenant Modal Specific Styling */
 #tenant-modal .modal-content {
-    max-width: 450px;
-    width: 90%;
-    max-height: 85vh;
-    overflow-y: auto;
+    max-width: 960px;
+    width: min(92vw, 960px);
+    max-height: calc(100vh - 40px);
+    overflow: hidden;
+    margin: 20px auto;
 }
 
 #tenant-modal .modal-header {
@@ -1906,11 +1907,11 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
 }
 
 #tenant-modal .modal-body {
-    padding: 20px;
+    padding: 18px 24px;
 }
 
 #tenant-modal .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 0;
 }
 
 #tenant-modal .form-group label {
@@ -1926,7 +1927,7 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
 }
 
 #tenant-modal .form-actions {
-    margin-top: 20px;
+    margin-top: 0;
     gap: 10px;
 }
 
@@ -1935,11 +1936,33 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
     font-size: 0.9rem;
 }
 
+/* Desktop: use the unused width to keep the tenant form on one screen. */
+#tenant-modal #tenant-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 22px;
+    align-items: start;
+}
+
+#tenant-modal #tenant-form .form-actions {
+    grid-column: 1 / -1;
+    padding-top: 2px;
+    justify-content: flex-end;
+}
+
+#tenant-modal #tenant-notes {
+    min-height: 48px;
+    height: 48px;
+    resize: vertical;
+}
+
 /* Responsive adjustments for tenant modal */
 @media (max-width: 768px) {
     #tenant-modal .modal-content {
         width: 95%;
         max-width: 400px;
+        max-height: 90vh;
+        overflow-y: auto;
         margin: 10% auto;
     }
     
@@ -1960,6 +1983,11 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
     #tenant-modal .form-group textarea {
         padding: 8px 10px;
         font-size: 0.85rem;
+    }
+
+    #tenant-modal #tenant-form {
+        grid-template-columns: 1fr;
+        gap: 12px;
     }
 }
 
