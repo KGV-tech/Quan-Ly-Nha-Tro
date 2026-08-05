@@ -84,6 +84,15 @@ function setupBackButton(buttonId, buttonElement) {
                     section.classList.add('active');
                 }
             }
+
+            // Some older navigation helpers use a different section-id format.
+            // Verify the requested destination so a back action can never leave
+            // the user on an empty screen.
+            const target = document.getElementById(config.targetSection + '-section');
+            if (target && !target.classList.contains('active')) {
+                document.querySelectorAll('main > section').forEach(section => section.classList.remove('active'));
+                target.classList.add('active');
+            }
         } catch (error) {
             console.error(`Error in back button ${buttonId}:`, error);
             
