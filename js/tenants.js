@@ -1749,8 +1749,7 @@ function renderMoveoutExpensesList(tenantId) {
     entries.forEach(([timeKey, expenses]) => {
         const item = document.createElement('div');
         item.className = 'moveout-history-item';
-        const total = expenses.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
-        item.innerHTML = `<span><strong>${formatDateRangeDisplay(timeKey)}</strong><small>${expenses.length} khoản · ${formatCurrency(total)}</small></span><button type="button" class="btn-secondary">Xem phiếu</button>`;
+        item.innerHTML = `<span><strong>${formatDateRangeDisplay(timeKey)}</strong></span><button type="button" class="btn-secondary">Xem phiếu</button>`;
         item.querySelector('button').onclick = () => viewMoveoutReceipt(timeKey, expenses, tenantId);
         list.appendChild(item);
     });
