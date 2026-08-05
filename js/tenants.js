@@ -1321,7 +1321,8 @@ function renderAllTenantsList(filteredTenants = null) {
         groups.forEach(({ house, tenants: groupTenants }) => {
             const houseColumn = document.createElement('div');
             houseColumn.className = 'tenant-house-column';
-            houseColumn.innerHTML = `<h4><i class="fas fa-home"></i> ${house ? house.name : 'Chưa gán nhà'}</h4>`;
+            const houseThemeClass = house ? getHouseTitleThemeClass(house.id) : '';
+            houseColumn.innerHTML = `<h4 class="${houseThemeClass}"><i class="fas fa-home"></i> ${house ? house.name : 'Chưa gán nhà'}</h4>`;
             groupTenants.sort(compareTenantsByRoom).forEach(({ tenant, room }) => {
                 const nameButton = document.createElement('button');
                 nameButton.className = 'tenant-name-link';
@@ -2415,7 +2416,8 @@ function syncRoomStatusWithTenants() {
     let changedRooms = [];
     
     rooms.forEach(room => {
-        const tenantsInRoom = tenants.filter(tenant => tenant.roomId === room.id);
+        // Người đã trả phòng vẫn được lưu trong lịch sử, nhưng không được tính là đang ở phòng.
+        const tenantsInRoom = tenants.filter(tenant => tenant.roomId === room.id && !isTenantMovedOut(tenant));
         const shouldBeOccupied = tenantsInRoom.length > 0;
         const currentStatus = room.status;
         const newStatus = shouldBeOccupied ? 'occupied' : 'available';

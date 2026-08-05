@@ -60,7 +60,7 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
 .house-overview-card{background:rgba(255,255,255,0.95);border-radius:12px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.1);border:1px solid rgba(255,255,255,0.3);transition:all 0.3s ease;cursor:pointer}
 .house-overview-card:hover{transform:translateY(-2px);box-shadow:0 6px 25px rgba(0,0,0,0.15)}
 .house-overview-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
-.house-overview-title{font-weight:600;color:#2d3748;font-size:1.1rem}
+.house-overview-title{font-weight:600;color:#2d3748;font-size:1.1rem}.house-title-orange{color:#d97706!important}.house-title-green{color:#059669!important}
 .house-overview-status{padding:4px 12px;border-radius:20px;font-size:0.8rem;font-weight:600}
 .status-excellent{background:rgba(72,187,120,0.2);color:#2f855a}
 .status-good{background:rgba(74,222,222,0.2);color:#2d3748}

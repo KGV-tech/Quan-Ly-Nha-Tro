@@ -225,6 +225,12 @@ function updateDashboardStats() {
     document.getElementById('total-tenants').textContent = totalTenants;
 }
 
+// Màu nhận diện cố định cho từng nhà, dùng thống nhất ở Dashboard và danh sách người thuê.
+function getHouseTitleThemeClass(houseId) {
+    const houseIndex = getHousesFromLocalStorage().findIndex(house => house.id === houseId);
+    return houseIndex >= 0 && houseIndex % 2 === 1 ? 'house-title-green' : 'house-title-orange';
+}
+
 // Render tổng quan nhà cho thuê
 function renderHousesOverview() {
     const housesOverviewEl = document.getElementById('houses-overview');
@@ -274,7 +280,7 @@ function renderHousesOverview() {
         houseCard.className = 'house-overview-card';
         houseCard.innerHTML = `
             <div class="house-overview-header">
-                <div class="house-overview-title">🏠 ${house.name}</div>
+                <div class="house-overview-title ${getHouseTitleThemeClass(house.id)}">🏠 ${house.name}</div>
                 <div class="house-overview-status ${statusClass}">${statusText}</div>
             </div>
             <div class="house-overview-stats">
