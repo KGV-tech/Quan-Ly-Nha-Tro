@@ -16,7 +16,15 @@
 
     function getClient() {
         if (!config || !config.url || !config.publishableKey || !window.supabase) return null;
-        if (!status.client) status.client = window.supabase.createClient(config.url, config.publishableKey);
+        if (!status.client) {
+            status.client = window.supabase.createClient(config.url, config.publishableKey, {
+                auth: {
+                    // Require credentials again after a browser refresh or a new tab.
+                    persistSession: false,
+                    autoRefreshToken: false
+                }
+            });
+        }
         return status.client;
     }
 
