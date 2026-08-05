@@ -214,6 +214,97 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
 #room-fees-modal .modal-body{padding:15px;flex:1;overflow:auto;display:flex;flex-direction:column}
 #room-fees-modal .modal-header{padding:15px 20px;flex-shrink:0}
 
+/* Desktop: keep the complete room-fee form visible without an inner scrollbar. */
+@media (min-width: 1024px) {
+    #room-fees-modal:not(.inline-room-fees) .modal-content {
+        width: min(96vw, 1600px);
+        max-width: none;
+        max-height: calc(100vh - 24px);
+        margin: 12px auto;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .modal-header {
+        padding: 12px 20px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .modal-body {
+        padding: 10px 18px 12px;
+        overflow: hidden;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .room-fees-header {
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .tenant-info-summary {
+        padding: 9px 13px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .room-fees-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .fee-card {
+        padding: 10px 12px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .fee-card h4 {
+        margin-bottom: 7px;
+        padding-bottom: 5px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .fee-options {
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .radio-option {
+        padding: 4px 7px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .fee-inputs,
+    #room-fees-modal:not(.inline-room-fees) .input-row {
+        gap: 7px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .room-fees-grid .form-group {
+        margin-bottom: 5px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .room-fees-grid .form-group input {
+        padding: 6px 8px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .fee-notes-section {
+        margin-top: 8px;
+        padding-top: 8px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .fee-notes-section .form-group textarea {
+        min-height: 42px;
+        height: 42px;
+        padding: 7px 9px;
+        resize: none;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .total-and-actions-section {
+        margin-bottom: 0;
+        gap: 12px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .total-card-compact,
+    #room-fees-modal:not(.inline-room-fees) .total-and-actions-section .form-actions {
+        padding: 9px 14px;
+    }
+
+    #room-fees-modal:not(.inline-room-fees) .total-card-compact h4 {
+        margin-bottom: 5px;
+    }
+}
+
 /* Room Fees Header */
 .room-fees-header{display:flex;gap:15px;margin-bottom:15px;flex-wrap:wrap;flex-shrink:0}
 .tenant-info-summary{background:rgba(74,222,222,0.1);padding:12px 15px;border-radius:10px;border-left:4px solid #4ADEDE;flex:1;min-width:280px}
