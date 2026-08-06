@@ -140,9 +140,6 @@ function setupButtons() {
 function setupMoveoutSection() {
     const tenantSelect = document.getElementById('moveout-tenant-select');
     const declareBtn = document.getElementById('moveout-declare-btn');
-    const editReceiptsBtn = document.getElementById('moveout-edit-receipt-btn');
-    const receiptsModal = document.getElementById('moveout-receipts-modal');
-    const receiptsList = document.getElementById('moveout-receipts-list');
     if (!tenantSelect || !declareBtn) return;
 
     const tenants = getTenantsFromLocalStorage()
@@ -196,58 +193,6 @@ function setupMoveoutSection() {
         }
     };
 
-    if (editReceiptsBtn && receiptsModal && receiptsList) {
-        editReceiptsBtn.onclick = () => {
-            const expenses = getExpensesFromLocalStorage();
-            const moveoutExpenses = expenses.filter(expense => expense.receiptType === 'moveout' || expense.category === 'deposit' || expense.category === 'prepaid_unused');
-            const grouped = {};
-            moveoutExpenses.forEach(expense => {
-                const fromDate = expense.fromDate || expense.date || '';
-                const toDate = expense.toDate || expense.date || '';
-                const key = `${expense.tenantId}|${fromDate} đến ${toDate}`;
-                if (!grouped[key]) {
-                    grouped[key] = [];
-                }
-                grouped[key].push(expense);
-            });
-
-            const groupedEntries = Object.entries(grouped).sort((a, b) => {
-                const dateA = new Date(a[1][0].toDate || a[1][0].date || 0);
-                const dateB = new Date(b[1][0].toDate || b[1][0].date || 0);
-                return dateB - dateA;
-            });
-
-            receiptsList.innerHTML = '';
-            if (groupedEntries.length === 0) {
-                receiptsList.innerHTML = '<div class="empty-state"><p>Chưa có Phiếu trả phòng nào đã lưu.</p></div>';
-            } else {
-                groupedEntries.forEach(([groupKey, groupExpenses]) => {
-                    const [tenantId, timeKey] = groupKey.split('|');
-                    const tenant = typeof getTenantById === 'function' ? getTenantById(tenantId) : null;
-                    const item = document.createElement('div');
-                    item.className = 'moveout-receipt-item';
-                    item.innerHTML = `
-                        <div class="moveout-receipt-meta">
-                            <strong>${tenant ? tenant.name : 'Người thuê không xác định'}</strong><br>
-                            Kỳ: ${timeKey}
-                        </div>
-                        <button type="button" class="btn-primary">Mở chỉnh sửa</button>
-                    `;
-                    const openBtn = item.querySelector('button');
-                    openBtn.addEventListener('click', () => {
-                        receiptsModal.style.display = 'none';
-                        activateInlineRoomFeesMode();
-                        if (typeof openTimeGroupEditModal === 'function') {
-                            openTimeGroupEditModal(timeKey, groupExpenses, tenantId);
-                        }
-                    });
-                    receiptsList.appendChild(item);
-                });
-            }
-
-            receiptsModal.style.display = 'block';
-        };
-    }
 }
 
 function isMoveoutExpense(expense) {

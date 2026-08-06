@@ -1763,11 +1763,27 @@ function renderMoveoutExpensesList(tenantId) {
     entries.forEach(([timeKey, expenses]) => {
         const item = document.createElement('div');
         item.className = 'moveout-history-item';
-        item.innerHTML = `<span><strong>${formatDateRangeDisplay(timeKey)}</strong></span><button type="button" class="btn-secondary">Xem phiếu</button>`;
-        item.querySelector('button').onclick = () => viewMoveoutReceipt(timeKey, expenses, tenantId);
+        item.innerHTML = `
+            <span><strong>${formatDateRangeDisplay(timeKey)}</strong></span>
+            <div class="moveout-history-actions">
+                <button type="button" class="btn-secondary view-moveout-receipt-btn">Xem phiếu</button>
+                <button type="button" class="btn-primary edit-moveout-receipt-btn">Chỉnh sửa</button>
+            </div>
+        `;
+        item.querySelector('.view-moveout-receipt-btn').onclick = () => viewMoveoutReceipt(timeKey, expenses, tenantId);
+        item.querySelector('.edit-moveout-receipt-btn').onclick = () => editMoveoutReceipt(timeKey, expenses, tenantId);
         list.appendChild(item);
     });
     container.appendChild(list);
+}
+
+function editMoveoutReceipt(timeKey, expenses, tenantId) {
+    // The editor belongs to the selected receipt; open it directly in the Trả phòng workflow.
+    if (typeof window.showSection === 'function') window.showSection('moveout');
+    const emptyMessage = document.getElementById('moveout-empty-message');
+    if (emptyMessage) emptyMessage.style.display = 'none';
+    activateInlineRoomFeesMode();
+    openTimeGroupEditModal(timeKey, expenses, tenantId);
 }
 
 function viewMoveoutReceipt(timeKey, expenses, tenantId) {
