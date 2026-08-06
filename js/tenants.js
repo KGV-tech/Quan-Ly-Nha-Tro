@@ -1802,8 +1802,10 @@ function viewMoveoutReceipt(timeKey, expenses, tenantId) {
             </div>
         </div>`;
     dialog.querySelector('.quick-close-btn').onclick = () => modal.remove();
-    const receiptPaper = displaySimpleReceipt(receiptData);
-    dialog.appendChild(receiptPaper);
+    dialog.appendChild(displaySimpleReceipt(receiptData));
+    // displaySimpleReceipt returns a DocumentFragment; get the actual element
+    // after it has been attached so printing and html2canvas receive valid HTML.
+    const receiptPaper = dialog.querySelector('.receipt-paper-simple');
     dialog.querySelector('.quick-print-btn').onclick = () => createPrintWindow(receiptPaper.outerHTML, 'Phiếu trả phòng');
     dialog.querySelector('.quick-export-btn').onclick = () => exportReceiptElementToPNG(receiptPaper, 'phieu-tra-phong');
     modal.onclick = event => { if (event.target === modal) modal.remove(); };
