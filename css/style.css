@@ -208,7 +208,7 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
 #room-fees-modal.inline-room-fees .modal-content{margin:0;width:100%;max-width:none;box-shadow:0 8px 24px rgba(0,0,0,0.08)}
 
 /* Room Fees Modal Specific Styling */
-#room-fees-modal:not(.inline-room-fees){inset:0;width:auto;height:auto;display:flex!important;align-items:center;justify-content:center;padding:12px;overflow:hidden auto;box-sizing:border-box}
+#room-fees-modal:not(.inline-room-fees)[style*="display: block"]{inset:0;width:auto;height:auto;display:flex!important;align-items:center;justify-content:center;padding:12px;overflow:hidden auto;box-sizing:border-box}
 #room-fees-modal .modal-content{max-width:1100px;width:100%;max-height:85vh;display:flex;flex:0 1 1100px;flex-direction:column;box-sizing:border-box;min-width:0;overflow:hidden}
 #room-fees-modal .modal-content,.room-fees-header,.room-fees-grid,.total-and-actions-section{min-width:0;max-width:100%}
 #room-fees-modal .modal-body{padding:15px;flex:1;overflow:auto;display:flex;flex-direction:column}
