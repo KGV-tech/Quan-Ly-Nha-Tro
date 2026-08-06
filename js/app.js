@@ -684,7 +684,6 @@ function loadPaymentPeriods(tenantId) {
 function setupReceiptEventListeners() {
     const previewBtn = document.getElementById('preview-receipt-btn');
     const backBtn = document.getElementById('back-to-receipt-form-btn');
-    const printPreviewBtn = document.getElementById('print-preview-btn');
     
     if (previewBtn) {
         previewBtn.onclick = previewReceipt;
@@ -696,10 +695,6 @@ function setupReceiptEventListeners() {
             document.getElementById('receipt-preview').style.display = 'none';
             document.querySelector('.print-receipt-form').style.display = 'block';
         };
-    }
-    
-    if (printPreviewBtn) {
-        printPreviewBtn.onclick = printFromPreview;
     }
     
     // Export PNG button (chỉ cho preview)
@@ -1217,63 +1212,6 @@ function displaySimpleReceipt(data) {
     
     return receiptHtml;
 }
-// Print styles for the sole compact receipt template.
-function getPrintStyles() {
-    return `
-        body { font-family: "Times New Roman", serif; margin: 0; background: white; }
-        .receipt-paper-simple { box-sizing: border-box; background: white; max-width: 750px; margin: 0 auto; padding: 20px; line-height: 1.4; color: #333; }
-        .simple-header { text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333; }
-        .simple-header h2 { margin: 0; font-size: 20px; font-weight: bold; color: #2c3e50; }
-        .simple-content { font-size: 18px; }.simple-section-title { margin: 16px 0 10px; padding: 8px 0 6px; border-top: 1px solid #333; font-size: 18px; font-weight: bold; text-align: center; text-transform: uppercase; color: #2c3e50; }.simple-item { margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }.simple-label { font-weight: bold; min-width: 120px; flex-shrink: 0; }.simple-details { flex: 1; margin-left: 20px; }.simple-amount { font-weight: bold; text-align: right; min-width: 120px; }.simple-total { margin-top: 15px; padding: 10px; border-top: 1px solid #333; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 20px; font-weight: bold; }.simple-notes { margin: 8px 0; padding: 8px 12px; border-left: 3px solid #f39c12; border-radius: 4px; }.notes-text { white-space: pre-wrap; word-break: break-word; }
-        @media print { @page { size: A5 portrait; margin: 15mm; } .receipt-paper-simple { padding: 15px; max-width: none; font-size: 16px; } .simple-content { font-size: 16px; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-    `;
-}
-// Helper function to create print window
-function createPrintWindow(receiptContent, title = '') {
-    const printWindow = window.open('', '_blank');
-    const styles = getPrintStyles();
-    
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>${title}</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>${styles}</style>
-        </head>
-        <body>
-            ${receiptContent}
-            <script>
-                window.onload = function() {
-                    window.print();
-                    window.onafterprint = function() {
-                        window.close();
-                    };
-                };
-            </script>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
-}
-
-function printReceipt(data) {
-    // Tạo HTML để in
-    displayReceiptPreview(data);
-    
-    // Mở cửa sổ in
-    setTimeout(() => {
-        const receiptContent = document.getElementById('receipt-content').innerHTML;
-        const title = `Phiếu thu - ${data.tenant.name} - Kỳ ${data.monthText}`;
-        createPrintWindow(receiptContent, title);
-    }, 100);
-}
-
-function printFromPreview() {
-    const receiptContent = document.getElementById('receipt-content').innerHTML;
-    createPrintWindow(receiptContent, 'Phiếu thu tiền phòng');
-}
-
 // ===========================================
 // EXPORT PNG FUNCTIONS
 // ===========================================

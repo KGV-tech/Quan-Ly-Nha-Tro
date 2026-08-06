@@ -1796,7 +1796,6 @@ function viewMoveoutReceipt(timeKey, expenses, tenantId) {
         <div class="quick-receipt-actions">
             <strong>Phiếu trả phòng — ${formatDateRangeDisplay(timeKey)}</strong>
             <div>
-                <button type="button" class="btn-secondary quick-print-btn"><i class="fas fa-print"></i> In Phiếu</button>
                 <button type="button" class="btn-primary quick-export-btn"><i class="fas fa-download"></i> Xuất PNG</button>
                 <button type="button" class="quick-close-btn" aria-label="Đóng">&times;</button>
             </div>
@@ -1806,7 +1805,6 @@ function viewMoveoutReceipt(timeKey, expenses, tenantId) {
     // displaySimpleReceipt returns a DocumentFragment; get the actual element
     // after it has been attached so printing and html2canvas receive valid HTML.
     const receiptPaper = dialog.querySelector('.receipt-paper-simple');
-    dialog.querySelector('.quick-print-btn').onclick = () => createPrintWindow(receiptPaper.outerHTML, 'Phiếu trả phòng');
     dialog.querySelector('.quick-export-btn').onclick = () => exportReceiptElementToPNG(receiptPaper, 'phieu-tra-phong');
     modal.onclick = event => { if (event.target === modal) modal.remove(); };
     modal.appendChild(dialog);
