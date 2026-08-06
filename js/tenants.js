@@ -1729,9 +1729,18 @@ function viewRoomFeeReceipt(timeKey, expenses, tenantId) {
     modal.className = 'quick-receipt-modal';
     const dialog = document.createElement('div');
     dialog.className = 'quick-receipt-dialog';
-    dialog.innerHTML = `<div class="quick-receipt-actions"><strong>Phiếu thu — ${formatDateRangeDisplay(timeKey)}</strong><button type="button" aria-label="Đóng">&times;</button></div>`;
-    dialog.querySelector('button').onclick = () => modal.remove();
+    dialog.innerHTML = `
+        <div class="quick-receipt-actions">
+            <strong>Phiếu thu — ${formatDateRangeDisplay(timeKey)}</strong>
+            <div>
+                <button type="button" class="btn-primary quick-export-btn"><i class="fas fa-download"></i> Xuất PNG</button>
+                <button type="button" class="quick-close-btn" aria-label="Đóng">&times;</button>
+            </div>
+        </div>`;
+    dialog.querySelector('.quick-close-btn').onclick = () => modal.remove();
     dialog.appendChild(displaySimpleReceipt(receiptData));
+    const receiptPaper = dialog.querySelector('.receipt-paper-simple');
+    dialog.querySelector('.quick-export-btn').onclick = () => exportReceiptElementToPNG(receiptPaper, 'phieu-thu');
     modal.onclick = event => { if (event.target === modal) modal.remove(); };
     modal.appendChild(dialog);
     document.body.appendChild(modal);

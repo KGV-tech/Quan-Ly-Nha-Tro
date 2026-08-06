@@ -597,7 +597,9 @@ function setupReceiptForm() {
     
     // Điền danh sách tất cả người thuê
     tenantSelect.innerHTML = '<option value="">-- Chọn người thuê --</option>';
-    const tenants = getTenantsFromLocalStorage();
+    const tenants = getTenantsFromLocalStorage().filter(tenant =>
+        typeof isTenantMovedOut !== 'function' || !isTenantMovedOut(tenant)
+    );
     tenants.forEach(tenant => {
         const option = document.createElement('option');
         option.value = tenant.id;
