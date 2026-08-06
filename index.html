@@ -290,46 +290,6 @@
                     <p>Chọn người thuê và bấm "Khai báo trả phòng" để nhập phiếu trực tiếp.</p>
                 </div>
 
-                <div class="moveout-print-section">
-                    <h3>In phiếu trả phòng</h3>
-                    <div class="moveout-print-form" id="moveout-print-form">
-                        <div class="form-group">
-                            <label for="moveout-payment-period">Kỳ trả phòng:</label>
-                            <select id="moveout-payment-period" disabled>
-                                <option value="">-- Chọn kỳ trả phòng --</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="moveout-template-type">Mẫu phiếu:</label>
-                            <select id="moveout-template-type">
-                                <option value="professional">Mẫu chuyên nghiệp</option>
-                                <option value="simple">Mẫu rút gọn</option>
-                            </select>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" id="preview-moveout-receipt-btn" class="btn-primary" disabled>
-                                <i class="fas fa-eye"></i> Xem trước
-                            </button>
-                        </div>
-                    </div>
-
-                    <div id="moveout-receipt-preview" class="receipt-preview" style="display: none;">
-                        <div class="receipt-actions">
-                            <button id="back-to-moveout-form-btn" class="btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Quay lại
-                            </button>
-                            <button id="print-moveout-preview-btn" class="btn-primary">
-                                <i class="fas fa-print"></i> In phiếu trả phòng
-                            </button>
-                            <button id="export-moveout-png-btn" class="btn-success">
-                                <i class="fas fa-download"></i> Xuất PNG
-                            </button>
-                        </div>
-                        <div id="moveout-receipt-content" class="receipt-content">
-                            <!-- Nội dung phiếu trả phòng sẽ được hiển thị ở đây -->
-                        </div>
-                    </div>
-                </div>
             </section>
 
             <section id="print-receipt-section" class="section">
@@ -350,13 +310,6 @@
                             <select id="receipt-payment-period" required disabled>
                                 <option value="">-- Chọn kỳ thanh toán --</option>
                                 <!-- Danh sách kỳ thanh toán sẽ được thêm bằng JavaScript -->
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="receipt-template-type">Mẫu phiếu thu:</label>
-                            <select id="receipt-template-type" required>
-                                <option value="professional">Mẫu chuyên nghiệp</option>
-                                <option value="simple">Mẫu rút gọn</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -401,100 +354,7 @@
                         <!-- Nội dung phiếu thu sẽ được hiển thị ở đây -->
                     </div>
                 </div>
-            </section>
-
-            <!-- Template phiếu thu (sẽ được sử dụng để in) -->
-            <template id="receipt-template">
-                <div class="receipt-paper">
-                    <div class="receipt-header">
-                        <div class="company-info">
-                            <h1>PHIẾU THU TIỀN PHÒNG</h1>
-                            <div class="receipt-period">
-                                <span id="receipt-month-year"></span>
-                            </div>
-                        </div>
-                        <div class="receipt-date-only">
-                            <p>Ngày: <span id="receipt-date"></span></p>
-                        </div>
-                    </div>
-                    
-                    <div class="tenant-info">
-                        <div class="info-row">
-                            <div class="info-pair">
-                                <span class="label">Họ tên:</span>
-                                <span class="value" id="receipt-tenant-name"></span>
-                            </div>
-                            <div class="info-pair">
-                                <span class="label">Số điện thoại:</span>
-                                <span class="value" id="receipt-tenant-phone"></span>
-                            </div>
-                        </div>
-                        <div class="info-row">
-                            <div class="info-pair">
-                                <span class="label">Phòng:</span>
-                                <span class="value" id="receipt-room-name"></span>
-                            </div>
-                            <div class="info-pair">
-                                <span class="label">Nhà:</span>
-                                <span class="value" id="receipt-house-name"></span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="receipt-content">
-                        <table class="receipt-table">
-                            <thead>
-                                <tr>
-                                    <th>STT</th>
-                                    <th>Nội dung</th>
-                                    <th>Chi tiết</th>
-                                    <th>Thành tiền (VNĐ)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="receipt-table-body">
-                                <!-- Nội dung sẽ được thêm bằng JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="receipt-summary">
-                        <div class="summary-row" id="receipt-agency-total-row" style="display: none; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px 20px; font-weight: bold; border-bottom: 1px dashed #333; font-size: 19px;">
-                            <span class="summary-label">Tổng các khoản Thu hộ, Chi hộ:</span>
-                            <span class="summary-amount" id="receipt-agency-total-amount"></span>
-                        </div>
-                        <div class="summary-row">
-                            <span class="summary-label">Tổng thanh toán:</span>
-                            <span class="summary-amount" id="receipt-total-amount"></span>
-                        </div>
-                        <div class="summary-text">
-                            <p>Bằng chữ: <span id="receipt-total-text"></span></p>
-                        </div>
-                    </div>
-                    
-                    <div class="receipt-footer">
-                        <div class="signature-section" style="align-items: flex-start;">
-                            <div class="signature-box" style="width: 33%;">
-                                <p class="signature-title">Người thu tiền</p>
-                                <p class="signature-subtitle">(Ký, ghi rõ họ tên)</p>
-                                <div class="signature-space"></div>
-                            </div>
-                            
-                            <div class="qr-code-section" id="receipt-qr-section" style="display: none; text-align: center; width: 33%;">
-                                <img id="receipt-qr-image" src="" alt="QR Code" style="width: 120px; height: 120px; object-fit: contain; border: 1px solid #ccc; padding: 5px; border-radius: 4px;">
-                                <p style="margin: 5px 0 0; font-size: 13px; font-weight: bold; color: #2c3e50;">Thanh toán chuyển khoản</p>
-                            </div>
-
-                            <div class="signature-box" style="width: 33%;">
-                                <p class="signature-title">Người nộp tiền</p>
-                                <p class="signature-subtitle">(Ký, ghi rõ họ tên)</p>
-                                <div class="signature-space"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <!-- Template phiếu thu rút gọn -->
+            </section>`r`n            <!-- Template phiếu thu rút gọn -->
             <template id="receipt-template-simple">
                 <div class="receipt-paper-simple" style="display: flex; align-items: stretch; justify-content: space-between; gap: 20px;">
                     <div style="flex: 1;">

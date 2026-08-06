@@ -200,10 +200,7 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
 .moveout-actions{display:flex;gap:10px;flex-wrap:wrap}
 .moveout-receipt-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px;background:#fff}
 .moveout-receipt-meta{color:#4a5568;font-size:.92rem}
-.moveout-print-section{background:rgba(255,255,255,0.85);border:1px solid rgba(74,222,222,0.2);border-radius:14px;padding:18px;margin-top:18px}
-.moveout-print-section h3{margin:0 0 14px 0;color:#2c3e50;font-size:1.1rem}
-.moveout-print-form .form-group{margin-bottom:14px}
-.receipt-moveout-banner{font-size:34px!important;color:#0d7377!important;background:#e0f2f1!important;letter-spacing:1px}
+
 .simple-moveout-title{text-align:center;font-size:24px;font-weight:bold;color:#991b1b;background:#fee2e2;padding:12px 20px;border-radius:8px;margin:0 0 15px 0;border:2px solid #991b1b;text-transform:uppercase}
 
 /* Reuse room-fees modal as inline content in move-out tab */
@@ -559,7 +556,7 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
 .tenant-status-section{background:rgba(255,255,255,.88);border-radius:14px;padding:18px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
 .tenant-status-section h3{margin:0 0 14px;color:#2d3748;font-size:1.08rem}.tenant-status-section h3 span{color:#64748b;font-size:.9rem;font-weight:500}
 .tenant-house-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.tenant-house-column{border:1px solid rgba(74,222,222,.25);border-radius:10px;padding:12px;background:#fff}.tenant-house-column h4{margin:0 0 8px;color:#0f766e}.tenant-name-link{display:flex;justify-content:space-between;align-items:center;width:100%;padding:10px 4px;border:0;border-top:1px solid #edf2f7;background:transparent;color:#334155;font:inherit;text-align:left;cursor:pointer}.tenant-name-link:hover{color:#0f766e;background:#f0fdfa}.tenant-name-link small{color:#64748b}.tenant-list-empty{color:#64748b;margin:0;padding:8px}.tenant-moved-out-badge{padding:8px 12px;border-radius:8px;background:#e2e8f0;color:#475569;font-weight:600}
-.quick-receipt-modal{position:fixed;inset:0;z-index:11000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.65);overflow:auto}.quick-receipt-dialog{width:min(860px,96vw);background:#fff;border-radius:12px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.35)}.quick-receipt-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.quick-receipt-actions button{border:0;background:transparent;font-size:2rem;line-height:1;cursor:pointer}
+.quick-receipt-modal{position:fixed;inset:0;z-index:11000;display:flex;align-items:flex-start;justify-content:center;padding:16px;background:rgba(15,23,42,.65);overflow:auto}.quick-receipt-dialog{width:min(900px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;background:#fff;border-radius:12px;padding:18px;box-sizing:border-box;box-shadow:0 20px 60px rgba(0,0,0,.35)}.quick-receipt-dialog .receipt-paper-simple{min-width:0!important;width:100%!important;box-sizing:border-box}.quick-receipt-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.quick-receipt-actions>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.quick-receipt-actions .quick-print-btn,.quick-receipt-actions .quick-export-btn{font-size:.9rem;padding:8px 12px}.quick-receipt-actions .quick-close-btn{border:0;background:transparent;font-size:2rem;line-height:1;cursor:pointer}
 .moveout-history-title{margin:24px 0 10px;color:#0f766e;font-size:1.05rem}.moveout-history-list{display:grid;gap:8px}.moveout-history-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid #bae6fd;border-radius:10px;background:#f0f9ff}.moveout-history-item span{display:flex;flex-direction:column;gap:3px}.moveout-history-item small{color:#64748b}.moveout-history-actions{display:flex;gap:8px;flex-wrap:wrap}
 .tenant-actions{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:10px;margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.3)}
 
@@ -663,163 +660,7 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
     .info-value{font-size:0.8rem}
 }
 
-/* Professional Receipt Styling */
-.receipt-paper {
-    background: white;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 40px;
-    font-family: 'Times New Roman', serif;
-    line-height: 1.6;
-    color: #333;
-    font-size: 19px;
-}
-
-.receipt-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid #333;
-}
-
-.company-info h1 {
-    font-size: 31px;
-    font-weight: bold;
-    color: #2c3e50;
-    margin: 0 0 10px 0;
-    text-align: center;
-}
-
-.company-info h1.receipt-moveout-banner {
-    color: #0d7377;
-    background: #e0f2f1;
-    padding: 10px 20px;
-    border-radius: 8px;
-    display: inline-block;
-}
-
-.receipt-period {
-    font-size: 21px;
-    color: #555;
-    text-align: center;
-    font-weight: 500;
-}
-
-.receipt-date-only {
-    text-align: right;
-    font-size: 19px;
-    color: #666;
-}
-
-.receipt-date-only p {
-    margin: 5px 0;
-}
-
-.tenant-info {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 30px;
-    border: 1px solid #dee2e6;
-}
-
-.info-row {
-    display: flex;
-    justify-content: flex-start;
-    margin-bottom: 10px;
-    align-items: center;
-    gap: 40px; /* Khoảng cách giữa 2 cặp thông tin */
-}
-
-.info-row .info-pair {
-    display: flex;
-    align-items: center;
-}
-
-.info-row .info-pair .label {
-    margin-right: 0.5em; /* 2 spacebar */
-}
-
-.info-row:last-child {
-    margin-bottom: 0;
-}
-
-.info-row .label {
-    font-weight: bold;
-    color: #2c3e50;
-    font-size: 19px;
-    white-space: nowrap;
-}
-
-.info-row .value {
-    color: #333;
-    font-size: 19px;
-}
-
-.receipt-content {
-    margin-bottom: 30px;
-}
-
-.receipt-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-    font-size: 19px;
-}
-
-.receipt-table th,
-.receipt-table td {
-    border: 1px solid #333;
-    padding: 14px 10px;
-    text-align: left;
-}
-
-.receipt-table th {
-    background: #f8f9fa;
-    font-weight: bold;
-    color: #2c3e50;
-    text-align: center;
-}
-
-.receipt-table th:first-child {
-    width: 50px;
-    text-align: center;
-}
-
-.receipt-table th:last-child {
-    width: 120px;
-    text-align: right;
-}
-
-.receipt-table td:first-child {
-    text-align: center;
-    font-weight: bold;
-}
-
-.receipt-table td:last-child {
-    text-align: right;
-    font-weight: bold;
-}
-
-.receipt-table .detail-cell {
-    font-size: 17px;
-    color: #666;
-    font-style: italic;
-}
-
-.receipt-table .receipt-section-header td {
-    background: #eef2f7;
-    font-weight: bold;
-    font-size: 18px;
-    color: #2c3e50;
-    text-align: center;
-    text-transform: uppercase;
-    padding: 12px 10px;
-    border-top: 2px solid #333;
-}
-
+/* Compact receipt styling */
 .simple-section-title {
     margin: 16px 0 10px;
     padding: 8px 0 6px;
@@ -829,78 +670,6 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
     text-align: center;
     text-transform: uppercase;
     color: #2c3e50;
-}
-
-.receipt-summary {
-    border-top: 2px solid #333;
-    padding-top: 20px;
-    margin-bottom: 30px;
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    background: #76ddfa;
-    padding: 15px 20px;
-    border-radius: 8px;
-    border: 2px solid #c1f9cf;
-}
-
-.summary-label {
-    font-size: 21px;
-    font-weight: bold;
-    color: #2c3e50;
-}
-
-.summary-amount {
-    font-size: 27px;
-    font-weight: bold;
-    color: #0130ba;
-    padding: 10px 20px;
-    border-radius: 4px;
-    background: #f8f9fa;
-}
-
-.summary-text {
-    font-size: 19px;
-    color: #555;
-    font-style: italic;
-}
-
-.receipt-footer {
-    margin-top: 40px;
-}
-
-.signature-section {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 30px;
-}
-
-.signature-box {
-    text-align: center;
-    width: 45%;
-}
-
-.signature-title {
-    font-weight: bold;
-    font-size: 19px;
-    color: #2c3e50;
-    margin-bottom: 5px;
-}
-
-.signature-subtitle {
-    font-size: 17px;
-    color: #666;
-    margin-bottom: 40px;
-}
-
-.signature-space {
-    height: 100px;
-    border-bottom: 1px solid #333;
-    margin-bottom: 10px;
 }
 
 
@@ -2159,28 +1928,7 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
     border-radius: 2px;
 }
 
-/* Moveout receipt specific styles */
-.receipt-table .receipt-section-header.refund-section td {
-    background: #e8f5e9;
-    color: #2e7d32;
-}
 
-.summary-row.moveout-summary-refund {
-    color: #2e7d32;
-    background: #e8f5e9;
-    padding: 10px 20px;
-    border-radius: 6px;
-    margin-bottom: 10px;
-}
-
-.summary-row.moveout-final-total {
-    background: #0d7377;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    border: none;
-    margin-top: 15px;
-}
 
 .summary-row.moveout-final-total .summary-amount,
 .summary-row.moveout-final-total .summary-label {

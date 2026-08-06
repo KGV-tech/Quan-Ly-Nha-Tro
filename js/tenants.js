@@ -1015,10 +1015,6 @@ function saveRoomFees() {
         // Render and complete
         renderExpensesList(tenantId);
         renderMoveoutExpensesList(tenantId);
-        if (isMoveoutReceipt && typeof loadMoveoutPaymentPeriods === 'function') {
-            const moveoutTenantSelect = document.getElementById('moveout-tenant-select');
-            loadMoveoutPaymentPeriods(moveoutTenantSelect?.value || tenantId);
-        }
         document.getElementById('room-fees-modal').style.display = 'none';
         // Xóa metadata copy source sau khi lưu
         const modalElAfter = document.getElementById('room-fees-modal');
@@ -1796,9 +1792,20 @@ function viewMoveoutReceipt(timeKey, expenses, tenantId) {
     modal.className = 'quick-receipt-modal';
     const dialog = document.createElement('div');
     dialog.className = 'quick-receipt-dialog';
-    dialog.innerHTML = `<div class="quick-receipt-actions"><strong>Phiếu trả phòng — ${formatDateRangeDisplay(timeKey)}</strong><button type="button" aria-label="Đóng">&times;</button></div>`;
-    dialog.querySelector('button').onclick = () => modal.remove();
-    dialog.appendChild(displaySimpleReceipt(receiptData));
+    dialog.innerHTML = `
+        <div class="quick-receipt-actions">
+            <strong>Phiếu trả phòng — ${formatDateRangeDisplay(timeKey)}</strong>
+            <div>
+                <button type="button" class="btn-secondary quick-print-btn"><i class="fas fa-print"></i> In Phiếu</button>
+                <button type="button" class="btn-primary quick-export-btn"><i class="fas fa-download"></i> Xuất PNG</button>
+                <button type="button" class="quick-close-btn" aria-label="Đóng">&times;</button>
+            </div>
+        </div>`;
+    dialog.querySelector('.quick-close-btn').onclick = () => modal.remove();
+    const receiptPaper = displaySimpleReceipt(receiptData);
+    dialog.appendChild(receiptPaper);
+    dialog.querySelector('.quick-print-btn').onclick = () => createPrintWindow(receiptPaper.outerHTML, 'Phiếu trả phòng');
+    dialog.querySelector('.quick-export-btn').onclick = () => exportReceiptElementToPNG(receiptPaper, 'phieu-tra-phong');
     modal.onclick = event => { if (event.target === modal) modal.remove(); };
     modal.appendChild(dialog);
     document.body.appendChild(modal);

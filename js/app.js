@@ -172,10 +172,7 @@ function setupMoveoutSection() {
 
     tenantSelect.onchange = () => {
         declareBtn.disabled = !tenantSelect.value;
-        loadMoveoutPaymentPeriods(tenantSelect.value);
     };
-
-    setupMoveoutPrintForm(tenantSelect);
 
     declareBtn.onclick = () => {
         const selectedTenantId = tenantSelect.value;
@@ -197,161 +194,6 @@ function setupMoveoutSection() {
 
 function isMoveoutExpense(expense) {
     return expense.receiptType === 'moveout' || expense.category === 'deposit' || expense.category === 'prepaid_unused';
-}
-
-function setupMoveoutPrintForm(tenantSelect) {
-    const paymentPeriodSelect = document.getElementById('moveout-payment-period');
-    const previewBtn = document.getElementById('preview-moveout-receipt-btn');
-    const backBtn = document.getElementById('back-to-moveout-form-btn');
-    const printBtn = document.getElementById('print-moveout-preview-btn');
-    const exportBtn = document.getElementById('export-moveout-png-btn');
-    if (!paymentPeriodSelect || !previewBtn) return;
-
-    if (tenantSelect) {
-        loadMoveoutPaymentPeriods(tenantSelect.value);
-    }
-
-    paymentPeriodSelect.onchange = () => {
-        previewBtn.disabled = !paymentPeriodSelect.value;
-    };
-
-    previewBtn.onclick = previewMoveoutReceipt;
-
-    if (backBtn) {
-        backBtn.onclick = () => {
-            document.getElementById('moveout-receipt-preview').style.display = 'none';
-            document.getElementById('moveout-print-form').style.display = 'block';
-        };
-    }
-
-    if (printBtn) {
-        printBtn.onclick = printMoveoutFromPreview;
-    }
-
-    if (exportBtn) {
-        exportBtn.onclick = exportMoveoutPreviewToPNG;
-    }
-}
-
-function loadMoveoutPaymentPeriods(tenantId) {
-    const paymentPeriodSelect = document.getElementById('moveout-payment-period');
-    const previewBtn = document.getElementById('preview-moveout-receipt-btn');
-    if (!paymentPeriodSelect) return;
-
-    paymentPeriodSelect.innerHTML = '<option value="">-- Chọn kỳ trả phòng --</option>';
-    paymentPeriodSelect.disabled = true;
-    if (previewBtn) previewBtn.disabled = true;
-
-    if (!tenantId) return;
-
-    const expenses = getExpensesFromLocalStorage();
-    const moveoutTimeGroups = {};
-
-    expenses.forEach(expense => {
-        if (expense.tenantId !== tenantId || !isMoveoutExpense(expense)) return;
-
-        let timeKey = null;
-        if (expense.fromDate && expense.toDate) {
-            timeKey = `${expense.fromDate} đến ${expense.toDate}`;
-        } else {
-            const timePattern = /từ (\d{4}-\d{2}-\d{2}) đến (\d{4}-\d{2}-\d{2})/;
-            const match = expense.notes?.match(timePattern);
-            if (match) {
-                timeKey = `${match[1]} đến ${match[2]}`;
-            }
-        }
-
-        if (timeKey) {
-            if (!moveoutTimeGroups[timeKey]) {
-                moveoutTimeGroups[timeKey] = [];
-            }
-            moveoutTimeGroups[timeKey].push(expense);
-        }
-    });
-
-    const sortedTimeKeys = Object.keys(moveoutTimeGroups).sort((a, b) => {
-        const dateA = new Date(a.split(' đến ')[1]);
-        const dateB = new Date(b.split(' đến ')[1]);
-        return dateB - dateA;
-    });
-
-    sortedTimeKeys.forEach(timeKey => {
-        const option = document.createElement('option');
-        option.value = timeKey;
-        option.textContent = `Kỳ ${formatDateRangeDisplay(timeKey)}`;
-        option.setAttribute('data-expenses', JSON.stringify(moveoutTimeGroups[timeKey]));
-        paymentPeriodSelect.appendChild(option);
-    });
-
-    if (sortedTimeKeys.length === 0) {
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = 'Chưa có phiếu trả phòng nào';
-        option.disabled = true;
-        paymentPeriodSelect.appendChild(option);
-    } else {
-        paymentPeriodSelect.disabled = false;
-    }
-}
-
-function previewMoveoutReceipt() {
-    const tenantId = document.getElementById('moveout-tenant-select')?.value;
-    const paymentPeriod = document.getElementById('moveout-payment-period')?.value;
-
-    if (!tenantId || !paymentPeriod) {
-        alert('Vui lòng chọn người thuê và kỳ trả phòng');
-        return;
-    }
-
-    const receiptData = generateMoveoutReceiptDataFromPeriod(tenantId, paymentPeriod);
-    if (!receiptData) return;
-
-    displayReceiptPreview(receiptData, {
-        contentId: 'moveout-receipt-content',
-        templateTypeId: 'moveout-template-type'
-    });
-
-    document.getElementById('moveout-print-form').style.display = 'none';
-    document.getElementById('moveout-receipt-preview').style.display = 'block';
-}
-
-function generateMoveoutReceiptDataFromPeriod(tenantId, paymentPeriod) {
-    const paymentPeriodSelect = document.getElementById('moveout-payment-period');
-    const selectedOption = paymentPeriodSelect?.querySelector(`option[value="${paymentPeriod}"]`);
-    if (!selectedOption) {
-        alert('Không tìm thấy thông tin kỳ trả phòng');
-        return null;
-    }
-
-    const monthlyExpenses = JSON.parse(selectedOption.getAttribute('data-expenses'));
-    if (!monthlyExpenses?.length) {
-        alert('Không có chi phí nào trong kỳ trả phòng này');
-        return null;
-    }
-
-    const receiptData = generateReceiptDataFromExpenses(tenantId, paymentPeriod, monthlyExpenses);
-    if (receiptData) {
-        receiptData.receiptKind = 'moveout';
-    }
-    return receiptData;
-}
-
-function printMoveoutFromPreview() {
-    const receiptContent = document.getElementById('moveout-receipt-content')?.innerHTML;
-    const templateType = document.getElementById('moveout-template-type')?.value || 'professional';
-    if (!receiptContent?.trim()) {
-        alert('Không có nội dung phiếu trả phòng để in');
-        return;
-    }
-    createPrintWindow(receiptContent, templateType, 'Phiếu trả phòng');
-}
-
-function exportMoveoutPreviewToPNG() {
-    exportReceiptToPNG({
-        contentId: 'moveout-receipt-content',
-        templateTypeId: 'moveout-template-type',
-        filenamePrefix: 'phieu-tra-phong'
-    });
 }
 
 function activateInlineRoomFeesMode() {
@@ -1073,230 +915,8 @@ function generateReceiptDataFromExpenses(tenantId, paymentPeriod, monthlyExpense
 
 function displayReceiptPreview(data, options = {}) {
     const content = document.getElementById(options.contentId || 'receipt-content');
-    const templateTypeEl = document.getElementById(options.templateTypeId || 'receipt-template-type');
-    const templateType = templateTypeEl ? templateTypeEl.value : 'professional';
-
-    let receiptHtml;
-    if (templateType === 'simple') {
-        receiptHtml = displaySimpleReceipt(data);
-    } else {
-        receiptHtml = displayProfessionalReceipt(data);
-    }
-
     content.innerHTML = '';
-    content.appendChild(receiptHtml);
-}
-
-function displayProfessionalReceipt(data) {
-    const template = document.getElementById('receipt-template');
-    const receiptHtml = template.content.cloneNode(true);
-    const isMoveout = data.receiptKind === 'moveout';
-    const receiptPaper = receiptHtml.querySelector('.receipt-paper');
-
-    if (isMoveout && receiptPaper) {
-        const mainTitle = receiptPaper.querySelector('.company-info h1');
-        const receiptHeader = receiptPaper.querySelector('.receipt-header');
-        const companyInfo = receiptPaper.querySelector('.company-info');
-        if (mainTitle) {
-            mainTitle.textContent = 'PHIẾU THANH LÝ HỢP ĐỒNG CHO THUÊ PHÒNG TRỌ';
-            mainTitle.classList.add('receipt-moveout-banner');
-            
-            if (receiptHeader) {
-                receiptHeader.style.position = 'relative';
-                receiptHeader.style.justifyContent = 'center';
-            }
-            if (companyInfo) {
-                companyInfo.style.alignItems = 'center';
-                companyInfo.style.width = '100%';
-            }
-            const dateOnly = receiptPaper.querySelector('.receipt-date-only');
-            if (dateOnly) {
-                dateOnly.style.position = 'absolute';
-                dateOnly.style.right = '0';
-            }
-        }
-    }
-
-    // Fill basic info
-    receiptHtml.getElementById('receipt-month-year').textContent = `Kỳ ${data.monthText}`;
-    receiptHtml.getElementById('receipt-tenant-name').textContent = data.tenant.name;
-    receiptHtml.getElementById('receipt-tenant-phone').textContent = data.tenant.phone || 'Không có';
-    
-    // Fill room and house info
-    receiptHtml.getElementById('receipt-room-name').textContent = data.roomName || 'Không xác định';
-    receiptHtml.getElementById('receipt-house-name').textContent = data.houseName || 'Không xác định';
-    
-    // Generate receipt date
-    const now = new Date();
-    const receiptDate = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
-    
-    receiptHtml.getElementById('receipt-date').textContent = receiptDate;
-    
-    // Fill table content
-    const tableBody = receiptHtml.getElementById('receipt-table-body');
-    let rowIndex = 1;
-
-    if (data.room) {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${rowIndex++}</td>
-            <td>Tiền phòng</td>
-            <td class="detail-cell">Tiền thuê phòng ${data.monthText}</td>
-            <td>${formatCurrency(data.room.amount)}</td>
-        `;
-        tableBody.appendChild(row);
-    }
-
-    const agencyExpenses = [];
-    if (data.electricity) agencyExpenses.push({ type: 'electricity', expense: data.electricity });
-    if (data.water) agencyExpenses.push({ type: 'water', expense: data.water });
-    // Tiền rác trước, internet sau
-    const garbageExpenses = data.other.filter(e => e.category === 'other');
-    const internetExpenses = data.other.filter(e => e.category === 'internet');
-    const otherExpenses = data.other.filter(e => e.category !== 'other' && e.category !== 'internet' && e.category !== 'deposit' && e.category !== 'prepaid_unused');
-    const refundExpensesList = data.other.filter(e => e.category === 'deposit' || e.category === 'prepaid_unused');
-
-    garbageExpenses.forEach(expense => agencyExpenses.push({ type: 'other', expense }));
-    internetExpenses.forEach(expense => agencyExpenses.push({ type: 'other', expense }));
-    otherExpenses.forEach(expense => agencyExpenses.push({ type: 'other', expense }));
-
-    const refundExpenses = [];
-    refundExpensesList.forEach(expense => refundExpenses.push({ type: 'refund', expense }));
-
-    if (agencyExpenses.length > 0) {
-        const sectionRow = document.createElement('tr');
-        sectionRow.className = 'receipt-section-header';
-        sectionRow.innerHTML = '<td colspan="4">Các khoản Thu hộ, Chi hộ</td>';
-        tableBody.appendChild(sectionRow);
-    }
-
-    agencyExpenses.forEach(({ type, expense }) => {
-        const row = document.createElement('tr');
-        let label = '';
-        let detailText = '';
-
-        if (type === 'electricity') {
-            label = 'Tiền điện';
-            if (expense.method === 'direct') {
-                detailText = 'Phí hàng tháng';
-            } else {
-                const consumption = (expense.newIndex || 0) - (expense.oldIndex || 0);
-                detailText = `Chỉ số cũ: ${expense.oldIndex || 0} - Chỉ số mới: ${expense.newIndex || 0}<br>${consumption} kWh x ${formatCurrency(expense.unitPrice || 0)}`;
-            }
-        } else if (type === 'water') {
-            label = 'Tiền nước';
-            if (expense.method === 'direct') {
-                detailText = 'Phí hàng tháng';
-            } else {
-                const consumption = (expense.newIndex || 0) - (expense.oldIndex || 0);
-                detailText = `Chỉ số cũ: ${expense.oldIndex || 0} - Chỉ số mới: ${expense.newIndex || 0}<br>${consumption} m³ x ${formatCurrency(expense.unitPrice || 0)}`;
-            }
-        } else {
-            label = getCategoryText(expense.category);
-            if (expense.category === 'other' || expense.category === 'internet') {
-                detailText = 'Phí hàng tháng';
-            } else {
-                detailText = expense.description || 'Chi phí khác';
-            }
-        }
-
-        row.innerHTML = `
-            <td>${rowIndex++}</td>
-            <td>${label}</td>
-            <td class="detail-cell">${detailText}</td>
-            <td>${formatCurrency(expense.amount)}</td>
-        `;
-        tableBody.appendChild(row);
-    });
-
-    let refundTotal = 0;
-    if (isMoveout && refundExpenses.length > 0) {
-        const sectionRow = document.createElement('tr');
-        sectionRow.className = 'receipt-section-header refund-section';
-        sectionRow.innerHTML = '<td colspan="4">Các khoản đã thu</td>';
-        tableBody.appendChild(sectionRow);
-
-        refundExpenses.forEach(({ type, expense }) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${rowIndex++}</td>
-                <td>${getCategoryText(expense.category)}</td>
-                <td class="detail-cell">${expense.notes || ''}</td>
-                <td>${formatCurrency(expense.amount)}</td>
-            `;
-            tableBody.appendChild(row);
-            refundTotal += expense.amount || 0;
-        });
-    }
-    
-    // Fill total
-    const agencyTotalRow = receiptHtml.getElementById('receipt-agency-total-row');
-    const agencyTotalAmount = receiptHtml.getElementById('receipt-agency-total-amount');
-    
-    // Add refund summary if any
-    const summaryContainer = receiptHtml.querySelector('.receipt-summary');
-    
-    if (agencyTotalRow && agencyTotalAmount) {
-        if (data.agencyTotal > 0) {
-            agencyTotalRow.style.display = 'flex';
-            agencyTotalAmount.textContent = formatCurrency(data.agencyTotal);
-        } else {
-            agencyTotalRow.style.display = 'none';
-        }
-    }
-
-    if (isMoveout && refundTotal > 0) {
-        const refundSummaryRow = document.createElement('div');
-        refundSummaryRow.className = 'summary-row moveout-summary-refund';
-        refundSummaryRow.style.display = 'flex';
-        refundSummaryRow.style.justifyContent = 'space-between';
-        refundSummaryRow.innerHTML = `
-            <span class="summary-label">Tổng các khoản đã thu:</span>
-            <span class="summary-amount">${formatCurrency(refundTotal)}</span>
-        `;
-        // Insert before total
-        const finalTotalRow = receiptHtml.querySelector('.summary-row:not(#receipt-agency-total-row)');
-        summaryContainer.insertBefore(refundSummaryRow, finalTotalRow);
-    }
-
-    let finalDisplayTotal = data.totalAmount;
-    const finalTotalRow = receiptHtml.querySelector('.summary-row:not(#receipt-agency-total-row):not(.moveout-summary-refund)');
-    
-    if (isMoveout) {
-        const roomAmount = data.room ? data.room.amount : 0;
-        const totalCosts = roomAmount + (data.agencyTotal || 0);
-        const settlementAmount = refundTotal - totalCosts;
-        finalDisplayTotal = Math.abs(settlementAmount);
-        
-        finalTotalRow.classList.add('moveout-final-total');
-        
-        let labelText = 'Tổng thanh toán:';
-        if (settlementAmount > 0) {
-            labelText = 'Chủ nhà trả lại tiền cho Người thuê phòng:';
-        } else if (settlementAmount < 0) {
-            labelText = 'Người thuê phòng thanh toán cho Chủ nhà:';
-        } else {
-            labelText = 'Hai bên đã thanh toán đủ:';
-        }
-        finalTotalRow.querySelector('.summary-label').textContent = labelText;
-    }
-
-    receiptHtml.getElementById('receipt-total-amount').textContent = formatCurrency(finalDisplayTotal);
-    receiptHtml.getElementById('receipt-total-text').textContent = numberToWords(finalDisplayTotal) + ' đồng';
-    
-    // QR Code
-    const includeQrEl = document.getElementById('receipt-include-qr');
-    const qrSection = receiptHtml.getElementById('receipt-qr-section');
-    const qrImage = receiptHtml.getElementById('receipt-qr-image');
-    if (includeQrEl && includeQrEl.value === 'yes' && qrSection && qrImage) {
-        const qrBase64 = localStorage.getItem('bank_qr_code');
-        if (qrBase64) {
-            qrImage.src = qrBase64;
-            qrSection.style.display = 'block';
-        }
-    }
-    
-    return receiptHtml;
+    content.appendChild(displaySimpleReceipt(data));
 }
 
 function displaySimpleReceipt(data) {
@@ -1597,124 +1217,21 @@ function displaySimpleReceipt(data) {
     
     return receiptHtml;
 }
-
-// Helper function to get print styles based on template type
-function getPrintStyles(templateType) {
-    if (templateType === 'simple') {
-        return `
-            body { font-family: 'Times New Roman', serif; margin: 0; background: white; }
-            .receipt-paper-simple { background: white; max-width: 750px; margin: 0 auto; padding: 20px; font-family: 'Times New Roman', serif; line-height: 1.4; color: #333; }
-            .simple-header { text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333; }
-            .simple-header h2 { margin: 0; font-size: 20px; font-weight: bold; color: #2c3e50; }
-            .simple-header.house-bach-dang { background-color: #f5e4b6; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
-            .simple-header.house-bach-dang h2 { color: #8b4513; }
-            .simple-header.is-moveout.house-bach-dang { background-color: #dbeafe; }
-            .simple-header.is-moveout.house-bach-dang h2 { color: #1e3a8a; }
-            .simple-header.house-binh-chuan { background-color: #c1f9cf; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
-            .simple-header.house-binh-chuan h2 { color: #2d5016; }
-            .simple-header.is-moveout.house-binh-chuan { background-color: #fef3c7; }
-            .simple-header.is-moveout.house-binh-chuan h2 { color: #92400e; }
-            .simple-content { font-size: 18px; }
-            .simple-section-title { margin: 16px 0 10px; padding: 8px 0 6px; border-top: 1px solid #333; font-size: 18px; font-weight: bold; text-align: center; text-transform: uppercase; color: #2c3e50; }
-            .simple-item { margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; }
-            .simple-label { font-weight: bold; min-width: 120px; flex-shrink: 0; }
-            .simple-details { flex: 1; margin-left: 20px; }
-            .simple-details div { margin-bottom: 5px; }
-            .simple-amount { font-weight: bold; text-align: right; min-width: 120px; }
-            .simple-total { margin-top: 15px; padding: 10px; border-top: 1px solid #333; background: yellow; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 20px; font-weight: bold; }
-            .simple-total-label { font-weight: bold; }
-            .simple-total-amount { font-size: 22px; font-weight: bold; color: #2c3e50; }
-            .simple-notes { margin: 8px 0; padding: 8px 12px; background: rgba(255, 255, 0, 0.1); border-left: 3px solid #f39c12; border-radius: 4px; }
-            .simple-moveout-title { text-align: center; font-size: 24px; font-weight: bold; color: #991b1b; background: #fee2e2; padding: 12px 20px; border-radius: 8px; margin: 0 0 15px 0; border: 2px solid #991b1b; text-transform: uppercase; }
-            .notes-content { display: flex; flex-direction: column; gap: 4px; }
-            .notes-label { font-weight: 600; color: #e67e22; font-size: 14px; }
-            .notes-text { color: #2c3e50; font-size: 13px; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
-            @media print {
-                @page { size: A5 portrait; margin: 15mm; }
-                .receipt-paper-simple { padding: 15px; box-shadow: none; border: none; margin: 0; max-width: none; font-size: 16px; }
-                .simple-header h2 { font-size: 18px; }
-                .simple-header.house-bach-dang { background-color: #f5e4b6 !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
-                .simple-header.house-bach-dang h2 { color: #8b4513 !important; }
-                .simple-header.is-moveout.house-bach-dang { background-color: #dbeafe !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
-                .simple-header.is-moveout.house-bach-dang h2 { color: #1e3a8a !important; }
-                .simple-header.house-binh-chuan { background-color: #c1f9cf !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
-                .simple-header.house-binh-chuan h2 { color: #2d5016 !important; }
-                .simple-header.is-moveout.house-binh-chuan { background-color: #fef3c7 !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
-                .simple-header.is-moveout.house-binh-chuan h2 { color: #92400e !important; }
-                .simple-content { font-size: 16px; }
-                .simple-total { font-size: 18px; background: yellow !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
-                .simple-total-amount { font-size: 20px; }
-                .simple-notes { background: rgba(255, 255, 0, 0.1) !important; -webkit-print-color-adjust: exact; color-adjust: exact; border-left: 3px solid #f39c12 !important; }
-                .notes-label { color: #e67e22 !important; font-size: 13px !important; }
-                .notes-text { color: #2c3e50 !important; font-size: 12px !important; }
-                .simple-moveout-title { background: #fee2e2 !important; color: #991b1b !important; border: 2px solid #991b1b !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
-                .simple-agency-total { -webkit-print-color-adjust: exact; color-adjust: exact; }
-                body { background: white !important; -webkit-print-color-adjust: exact; }
-            }
-        `;
-    } else {
-        return `
-            body { font-family: 'Times New Roman', serif; margin: 0; background: white; }
-            .receipt-paper { background: white; max-width: 800px; margin: 0 auto; padding: 40px; font-family: 'Times New Roman', serif; line-height: 1.6; color: #333; font-size: 19px; }
-            .receipt-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #333; }
-            .company-info h1 { font-size: 31px; font-weight: bold; color: #2c3e50; margin: 0 0 10px 0; text-align: center; }
-            .receipt-moveout-banner { font-size: 34px !important; color: #c0392b !important; letter-spacing: 1px; }
-            .receipt-period { font-size: 21px; color: #555; text-align: center; font-weight: 500; }
-            .receipt-date-only { text-align: right; font-size: 19px; color: #666; }
-            .receipt-date-only p { margin: 5px 0; }
-            .tenant-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #dee2e6; }
-            .info-row { display: flex; justify-content: flex-start; margin-bottom: 10px; align-items: center; gap: 40px; }
-            .info-row .info-pair { display: flex; align-items: center; }
-            .info-row .info-pair .label { margin-right: 0.5em; }
-            .info-row:last-child { margin-bottom: 0; }
-            .info-row .label { font-weight: bold; color: #2c3e50; font-size: 19px; white-space: nowrap; }
-            .info-row .value { color: #333; font-size: 19px; }
-            .receipt-content { margin-bottom: 30px; }
-            .receipt-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 19px; }
-            .receipt-table th, .receipt-table td { border: 1px solid #333; padding: 14px 10px; text-align: left; }
-            .receipt-table th { background: #f8f9fa; font-weight: bold; color: #2c3e50; text-align: center; }
-            .receipt-table th:first-child { width: 50px; text-align: center; }
-            .receipt-table th:last-child { width: 120px; text-align: right; }
-            .receipt-table td:first-child { text-align: center; font-weight: bold; }
-            .receipt-table td:last-child { text-align: right; font-weight: bold; }
-            .receipt-table .detail-cell { font-size: 17px; color: #666; font-style: italic; }
-            .receipt-table .receipt-section-header td { background: #eef2f7; font-weight: bold; font-size: 18px; color: #2c3e50; text-align: center; text-transform: uppercase; padding: 12px 10px; border-top: 2px solid #333; }
-            .receipt-table .receipt-section-header.refund-section td { background: #e8f5e9; color: #2e7d32; }
-            .receipt-summary { border-top: 2px solid #333; padding-top: 20px; margin-bottom: 30px; }
-            .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #fff3cd; padding: 15px 20px; border-radius: 8px; border: 2px solid #ffc107; }
-            .summary-row.moveout-summary-refund { background: #e8f5e9; color: #2e7d32; border: 2px solid #2e7d32; }
-            .summary-row.moveout-final-total { background: #0d7377; color: white; border: 2px solid #0d7377; margin-top: 15px; }
-            .summary-row.moveout-final-total .summary-amount, .summary-row.moveout-final-total .summary-label { color: white; }
-            .summary-label { font-size: 21px; font-weight: bold; color: #2c3e50; }
-            .summary-amount { font-size: 27px; font-weight: bold; color: #e74c3c; padding: 10px 20px; border-radius: 4px; background: #f8f9fa; }
-            .summary-text { font-size: 19px; color: #555; font-style: italic; }
-            .receipt-footer { margin-top: 40px; }
-            .signature-section { display: flex; justify-content: space-between; margin-bottom: 30px; }
-            .signature-box { text-align: center; width: 45%; }
-            .signature-title { font-weight: bold; font-size: 19px; color: #2c3e50; margin-bottom: 5px; }
-            .signature-subtitle { font-size: 17px; color: #666; margin-bottom: 40px; }
-            .signature-space { height: 100px; border-bottom: 1px solid #333; margin-bottom: 10px; }
-            @media print {
-                @page { size: A5 portrait; margin: 15mm; }
-                .receipt-paper { padding: 15px; box-shadow: none; border: none; margin: 0; max-width: none; font-size: 15px; }
-                .receipt-header { page-break-inside: avoid; }
-                .receipt-table { page-break-inside: avoid; }
-                .signature-section { page-break-inside: avoid; }
-                .summary-row { background: #fff3cd !important; border: 2px solid #ffc107 !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
-                .summary-row.moveout-summary-refund { background: #e8f5e9 !important; border: 2px solid #2e7d32 !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
-                .summary-row.moveout-final-total { background: #0d7377 !important; border: 2px solid #0d7377 !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
-                .receipt-moveout-banner { background: #e0f2f1 !important; color: #0d7377 !important; -webkit-print-color-adjust: exact; color-adjust: exact; padding: 10px 20px; border-radius: 8px; display: inline-block; }
-                .receipt-table .receipt-section-header.refund-section td { background: #e8f5e9 !important; color: #2e7d32 !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
-                body { background: white !important; -webkit-print-color-adjust: exact; }
-            }
-        `;
-    }
+// Print styles for the sole compact receipt template.
+function getPrintStyles() {
+    return `
+        body { font-family: "Times New Roman", serif; margin: 0; background: white; }
+        .receipt-paper-simple { box-sizing: border-box; background: white; max-width: 750px; margin: 0 auto; padding: 20px; line-height: 1.4; color: #333; }
+        .simple-header { text-align: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333; }
+        .simple-header h2 { margin: 0; font-size: 20px; font-weight: bold; color: #2c3e50; }
+        .simple-content { font-size: 18px; }.simple-section-title { margin: 16px 0 10px; padding: 8px 0 6px; border-top: 1px solid #333; font-size: 18px; font-weight: bold; text-align: center; text-transform: uppercase; color: #2c3e50; }.simple-item { margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }.simple-label { font-weight: bold; min-width: 120px; flex-shrink: 0; }.simple-details { flex: 1; margin-left: 20px; }.simple-amount { font-weight: bold; text-align: right; min-width: 120px; }.simple-total { margin-top: 15px; padding: 10px; border-top: 1px solid #333; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 20px; font-weight: bold; }.simple-notes { margin: 8px 0; padding: 8px 12px; border-left: 3px solid #f39c12; border-radius: 4px; }.notes-text { white-space: pre-wrap; word-break: break-word; }
+        @media print { @page { size: A5 portrait; margin: 15mm; } .receipt-paper-simple { padding: 15px; max-width: none; font-size: 16px; } .simple-content { font-size: 16px; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    `;
 }
-
 // Helper function to create print window
-function createPrintWindow(receiptContent, templateType, title = '') {
+function createPrintWindow(receiptContent, title = '') {
     const printWindow = window.open('', '_blank');
-    const styles = getPrintStyles(templateType);
+    const styles = getPrintStyles();
     
     printWindow.document.write(`
         <!DOCTYPE html>
@@ -1748,14 +1265,13 @@ function printReceipt(data) {
     setTimeout(() => {
         const receiptContent = document.getElementById('receipt-content').innerHTML;
         const title = `Phiếu thu - ${data.tenant.name} - Kỳ ${data.monthText}`;
-        createPrintWindow(receiptContent, 'professional', title);
+        createPrintWindow(receiptContent, title);
     }, 100);
 }
 
 function printFromPreview() {
     const receiptContent = document.getElementById('receipt-content').innerHTML;
-    const templateType = document.getElementById('receipt-template-type').value;
-    createPrintWindow(receiptContent, templateType);
+    createPrintWindow(receiptContent, 'Phiếu thu tiền phòng');
 }
 
 // ===========================================
@@ -1765,12 +1281,11 @@ function printFromPreview() {
 function exportPreviewToPNG() {
     exportReceiptToPNG({
         contentId: 'receipt-content',
-        templateTypeId: 'receipt-template-type',
         filenamePrefix: 'phieu-thu'
     });
 }
 
-function exportReceiptToPNG({ contentId, templateTypeId, filenamePrefix }) {
+function exportReceiptToPNG({ contentId, filenamePrefix }) {
     const receiptContent = document.getElementById(contentId);
 
     if (!receiptContent || !receiptContent.innerHTML.trim()) {
@@ -1778,7 +1293,12 @@ function exportReceiptToPNG({ contentId, templateTypeId, filenamePrefix }) {
         return;
     }
 
-    const targetElement = receiptContent.querySelector('.receipt-paper-simple, .receipt-paper') || receiptContent;
+    const targetElement = receiptContent.querySelector('.receipt-paper-simple') || receiptContent;
+    exportReceiptElementToPNG(targetElement, filenamePrefix);
+}
+
+function exportReceiptElementToPNG(targetElement, filenamePrefix) {
+    if (!targetElement) return;
 
     html2canvas(targetElement, {
         scale: 2,
@@ -1786,21 +1306,11 @@ function exportReceiptToPNG({ contentId, templateTypeId, filenamePrefix }) {
         allowTaint: true,
         backgroundColor: '#ffffff'
     }).then(canvas => {
-        const templateTypeEl = document.getElementById(templateTypeId);
-        const templateType = templateTypeEl ? templateTypeEl.value : 'professional';
         let tenantName = filenamePrefix;
-
-        if (templateType === 'simple') {
-            const tenantLocationElement = receiptContent.querySelector('#simple-tenant-location');
-            if (tenantLocationElement) {
-                const fullText = (tenantLocationElement.textContent || '').trim();
-                tenantName = fullText.split(' –')[0] || fullText.split('-')[0] || fullText;
-            }
-        } else {
-            const tenantNameElement = receiptContent.querySelector('#receipt-tenant-name');
-            if (tenantNameElement) {
-                tenantName = (tenantNameElement.textContent || '').trim();
-            }
+        const tenantLocationElement = targetElement.querySelector('#simple-tenant-location');
+        if (tenantLocationElement) {
+            const fullText = (tenantLocationElement.textContent || '').trim();
+            tenantName = fullText.split(' –')[0] || fullText.split('-')[0] || fullText;
         }
 
         const sanitizedName = tenantName
