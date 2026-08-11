@@ -942,10 +942,13 @@ function displaySimpleReceipt(data) {
     const simpleHeader = receiptHtml.querySelector('.simple-header');
     if (simpleHeader) {
         if (isMoveout) simpleHeader.classList.add('is-moveout');
-        const houseName = data.tenant.house.name.toLowerCase();
+        const houseName = (data.tenant.house.name || '').toLowerCase();
         if (houseName.includes('bạch đằng') || houseName.includes('bach dang')) {
             simpleHeader.classList.add('house-bach-dang');
-        } else if (houseName.includes('bình chuẩn') || houseName.includes('binh chuan')) {
+        } else if (
+            houseName.includes('bình chuẩn') || houseName.includes('binh chuan') ||
+            houseName.includes('an phú') || houseName.includes('an phu') || houseName.includes('37/7')
+        ) {
             simpleHeader.classList.add('house-binh-chuan');
         }
     }

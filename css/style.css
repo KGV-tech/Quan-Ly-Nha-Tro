@@ -708,35 +708,35 @@ nav a.active{background:linear-gradient(135deg,#4ADEDE 0%,#ef4444 100%);color:wh
 
 /* Màu tiêu đề cho từng nhà cụ thể */
 .simple-header.house-bach-dang {
-    background-color: #f5e4b6;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 25px;
-}
-.simple-header.house-bach-dang h2 {
-    color: #8b4513;
-}
-.simple-header.is-moveout.house-bach-dang {
-    background-color: #dbeafe;
-}
-.simple-header.is-moveout.house-bach-dang h2 {
-    color: #1e3a8a;
-}
-
-.simple-header.house-binh-chuan {
     background-color: #c1f9cf;
     padding: 15px;
     border-radius: 8px;
     margin-bottom: 25px;
 }
-.simple-header.house-binh-chuan h2 {
+.simple-header.house-bach-dang h2 {
     color: #2d5016;
 }
+.simple-header.is-moveout.house-bach-dang {
+    background-color: #c1f9cf;
+}
+.simple-header.is-moveout.house-bach-dang h2 {
+    color: #2d5016;
+}
+
+.simple-header.house-binh-chuan {
+    background-color: #fecaca;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+}
+.simple-header.house-binh-chuan h2 {
+    color: #8b4513;
+}
 .simple-header.is-moveout.house-binh-chuan {
-    background-color: #fef3c7;
+    background-color: #fecaca;
 }
 .simple-header.is-moveout.house-binh-chuan h2 {
-    color: #92400e;
+    color: #8b4513;
 }
 
 .simple-content {
